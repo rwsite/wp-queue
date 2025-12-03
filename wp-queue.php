@@ -22,6 +22,7 @@ if (! defined('ABSPATH')) {
 // Prevent loading multiple copies of the plugin
 if (defined('WP_QUEUE_VERSION')) {
     trigger_error('WP Queue: Multiple copies of the plugin detected. Please deactivate duplicates.', E_USER_ERROR);
+
     return;
 }
 

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use WPQueue\Contracts\JobInterface;
 use WPQueue\Jobs\Job;
 use WPQueue\Queue\DatabaseQueue;
 use WPQueue\QueueManager;
@@ -10,7 +9,7 @@ use WPQueue\QueueManager;
 class SimpleJob extends Job
 {
     public function __construct(
-        public readonly string $payload = ''
+        public readonly string $payload = '',
     ) {
         parent::__construct();
     }
@@ -18,7 +17,7 @@ class SimpleJob extends Job
     public function handle(): void {}
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Mock WordPress functions
     Brain\Monkey\Functions\stubs([
         'get_site_option' => function ($key, $default = false) {
@@ -33,70 +32,70 @@ beforeEach(function () {
     ]);
 });
 
-describe('QueueManager', function () {
-    it('can resolve queue by name', function () {
+describe('QueueManager', function (): void {
+    it('can resolve queue by name', function (): void {
         $manager = new QueueManager();
         $queue = $manager->connection('database');
-        
+
         expect($queue)->toBeInstanceOf(DatabaseQueue::class);
     });
 
-    it('can add custom queue driver', function () {
+    it('can add custom queue driver', function (): void {
         $manager = new QueueManager();
         $customQueue = Mockery::mock(WPQueue\Contracts\QueueInterface::class);
-        
+
         $manager->extend('custom', fn () => $customQueue);
         $resolved = $manager->connection('custom');
-        
+
         expect($resolved)->toBe($customQueue);
     });
 
-    it('returns default connection', function () {
+    it('returns default connection', function (): void {
         $manager = new QueueManager();
         $default = $manager->getDefaultDriver();
-        
+
         expect($default)->toBe('database');
     });
 });
 
-describe('DatabaseQueue', function () {
-    it('can push job to queue', function () {
+describe('DatabaseQueue', function (): void {
+    it('can push job to queue', function (): void {
         Brain\Monkey\Functions\stubs([
             'get_site_option' => fn () => [],
             'update_site_option' => fn () => true,
         ]);
-        
+
         $queue = new DatabaseQueue();
         $job = new SimpleJob('test');
-        
+
         $id = $queue->push($job);
-        
+
         expect($id)->toBe($job->getId());
     });
 
-    it('can check if queue is empty', function () {
+    it('can check if queue is empty', function (): void {
         Brain\Monkey\Functions\stubs([
             'get_site_option' => fn () => [],
         ]);
-        
+
         $queue = new DatabaseQueue();
-        
+
         expect($queue->isEmpty('default'))->toBeTrue();
     });
 
-    it('can get queue size', function () {
+    it('can get queue size', function (): void {
         $job1 = new SimpleJob();
         $job2 = new SimpleJob();
-        
+
         Brain\Monkey\Functions\stubs([
             'get_site_option' => fn () => [
                 $job1->getId() => ['payload' => serialize($job1), 'available_at' => time(), 'reserved_at' => null, 'attempts' => 0],
                 $job2->getId() => ['payload' => serialize($job2), 'available_at' => time(), 'reserved_at' => null, 'attempts' => 0],
             ],
         ]);
-        
+
         $queue = new DatabaseQueue();
-        
+
         expect($queue->size('default'))->toBe(2);
     });
 });

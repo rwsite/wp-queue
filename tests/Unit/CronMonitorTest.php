@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use WPQueue\Admin\CronMonitor;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Brain\Monkey\Functions\stubs([
         '__' => fn ($text) => $text,
         'esc_html__' => fn ($text) => $text,
@@ -17,8 +17,8 @@ beforeEach(function () {
     ]);
 });
 
-describe('CronMonitor', function () {
-    it('can get all cron events', function () {
+describe('CronMonitor', function (): void {
+    it('can get all cron events', function (): void {
         $cronArray = [
             time() + 3600 => [
                 'wp_scheduled_delete' => [
@@ -53,7 +53,7 @@ describe('CronMonitor', function () {
         expect($events[1]['hook'])->toBe('wp_update_plugins');
     });
 
-    it('can filter events by hook prefix', function () {
+    it('can filter events by hook prefix', function (): void {
         $cronArray = [
             time() + 3600 => [
                 'wp_queue_process' => [
@@ -76,7 +76,7 @@ describe('CronMonitor', function () {
         expect($events[0]['hook'])->toBe('wp_queue_process');
     });
 
-    it('can get single event details', function () {
+    it('can get single event details', function (): void {
         $cronArray = [
             time() + 3600 => [
                 'my_custom_hook' => [
@@ -102,7 +102,7 @@ describe('CronMonitor', function () {
         expect($event['args'])->toBe(['arg1']);
     });
 
-    it('returns null for non-existent event', function () {
+    it('returns null for non-existent event', function (): void {
         Brain\Monkey\Functions\expect('_get_cron_array')
             ->once()
             ->andReturn([]);
@@ -113,7 +113,7 @@ describe('CronMonitor', function () {
         expect($event)->toBeNull();
     });
 
-    it('can unschedule an event', function () {
+    it('can unschedule an event', function (): void {
         $timestamp = time() + 3600;
 
         Brain\Monkey\Functions\stubs([
@@ -126,10 +126,10 @@ describe('CronMonitor', function () {
         expect($result)->toBeTrue();
     });
 
-    it('can run event now', function () {
+    it('can run event now', function (): void {
         $called = false;
         Brain\Monkey\Functions\stubs([
-            'do_action' => function () use (&$called) {
+            'do_action' => function () use (&$called): void {
                 $called = true;
             },
         ]);
@@ -141,7 +141,7 @@ describe('CronMonitor', function () {
         expect(true)->toBeTrue();
     });
 
-    it('can get cron schedules', function () {
+    it('can get cron schedules', function (): void {
         Brain\Monkey\Functions\expect('wp_get_schedules')
             ->once()
             ->andReturn([
@@ -157,7 +157,7 @@ describe('CronMonitor', function () {
         expect($schedules['hourly']['interval'])->toBe(3600);
     });
 
-    it('identifies core WordPress hooks', function () {
+    it('identifies core WordPress hooks', function (): void {
         $monitor = new CronMonitor();
 
         expect($monitor->isWordPressCore('wp_scheduled_delete'))->toBeTrue();
@@ -166,7 +166,7 @@ describe('CronMonitor', function () {
         expect($monitor->isWordPressCore('my_custom_hook'))->toBeFalse();
     });
 
-    it('identifies WooCommerce hooks', function () {
+    it('identifies WooCommerce hooks', function (): void {
         $monitor = new CronMonitor();
 
         expect($monitor->isWooCommerce('woocommerce_cleanup_sessions'))->toBeTrue();
@@ -174,7 +174,7 @@ describe('CronMonitor', function () {
         expect($monitor->isWooCommerce('my_custom_hook'))->toBeFalse();
     });
 
-    it('can clear all hooks by prefix', function () {
+    it('can clear all hooks by prefix', function (): void {
         $cronArray = [
             time() + 3600 => [
                 'my_plugin_task1' => [md5('') => ['schedule' => 'hourly', 'args' => [], 'interval' => 3600]],

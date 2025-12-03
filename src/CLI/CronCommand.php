@@ -58,6 +58,7 @@ class CronCommand
      *     wp queue cron list --format=json
      *
      * @subcommand list
+     *
      * @when after_wp_load
      */
     public function list_(array $args, array $assocArgs): void

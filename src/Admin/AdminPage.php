@@ -12,19 +12,18 @@ class AdminPage
     {
         add_action('admin_menu', [$this, 'addMenuPage']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
-        add_action('load-toplevel_page_wp-queue', [$this, 'addHelpTabs']);
+        add_action('load-tools_page_wp-queue', [$this, 'addHelpTabs']);
     }
 
     public function addMenuPage(): void
     {
-        add_menu_page(
+        add_submenu_page(
+            'tools.php',
             __('WP Queue', 'wp-queue'),
             __('WP Queue', 'wp-queue'),
             'manage_options',
             'wp-queue',
             [$this, 'renderPage'],
-            'dashicons-database',
-            80
         );
     }
 
@@ -59,23 +58,23 @@ class AdminPage
 
     protected function getHelpTabAbout(): string
     {
-        return '<h2>' . __('About WP Queue', 'wp-queue') . ' ' . WP_QUEUE_VERSION . '</h2>' .
-            '<p>' . __('WP Queue is a scalable queue manager for WordPress background processing. It works by triggering hook events for execution at a specific time or in the future. Scheduled actions can also be scheduled for regular execution.', 'wp-queue') . '</p>' .
-            '<h3>' . __('Features', 'wp-queue') . '</h3>' .
-            '<ul>' .
-            '<li>' . __('Laravel-style job dispatching with PHP 8 attributes', 'wp-queue') . '</li>' .
-            '<li>' . __('Multiple queue drivers (Database, Sync, Redis)', 'wp-queue') . '</li>' .
-            '<li>' . __('Automatic retries with exponential backoff', 'wp-queue') . '</li>' .
-            '<li>' . __('Job scheduling with cron expressions', 'wp-queue') . '</li>' .
-            '<li>' . __('WP-Cron monitoring and management', 'wp-queue') . '</li>' .
-            '<li>' . __('REST API for external integrations', 'wp-queue') . '</li>' .
+        return '<h2>'.__('About WP Queue', 'wp-queue').' '.WP_QUEUE_VERSION.'</h2>'.
+            '<p>'.__('WP Queue is a scalable queue manager for WordPress background processing. It works by triggering hook events for execution at a specific time or in the future. Scheduled actions can also be scheduled for regular execution.', 'wp-queue').'</p>'.
+            '<h3>'.__('Features', 'wp-queue').'</h3>'.
+            '<ul>'.
+            '<li>'.__('Laravel-style job dispatching with PHP 8 attributes', 'wp-queue').'</li>'.
+            '<li>'.__('Multiple queue drivers (Database, Sync, Redis)', 'wp-queue').'</li>'.
+            '<li>'.__('Automatic retries with exponential backoff', 'wp-queue').'</li>'.
+            '<li>'.__('Job scheduling with cron expressions', 'wp-queue').'</li>'.
+            '<li>'.__('WP-Cron monitoring and management', 'wp-queue').'</li>'.
+            '<li>'.__('REST API for external integrations', 'wp-queue').'</li>'.
             '</ul>';
     }
 
     protected function getHelpTabUsage(): string
     {
-        return '<h2>' . __('Basic Usage', 'wp-queue') . '</h2>' .
-            '<h3>' . __('Creating a Job', 'wp-queue') . '</h3>' .
+        return '<h2>'.__('Basic Usage', 'wp-queue').'</h2>'.
+            '<h3>'.__('Creating a Job', 'wp-queue').'</h3>'.
             '<pre><code>use WPQueue\Jobs\Job;
 use WPQueue\Attributes\Queue;
 use WPQueue\Attributes\Retries;
@@ -94,8 +93,8 @@ class SendEmailJob extends Job
     {
         wp_mail($this->email, \'Subject\', \'Body\');
     }
-}</code></pre>' .
-            '<h3>' . __('Dispatching', 'wp-queue') . '</h3>' .
+}</code></pre>'.
+            '<h3>'.__('Dispatching', 'wp-queue').'</h3>'.
             '<pre><code>use WPQueue\WPQueue;
 
 // Dispatch immediately
@@ -108,8 +107,8 @@ WPQueue::dispatch(new SendEmailJob(\'user@example.com\'))
 
     protected function getHelpTabCli(): string
     {
-        return '<h2>' . __('WP-CLI Commands', 'wp-queue') . '</h2>' .
-            '<p>' . __('Run', 'wp-queue') . ' <code>wp help queue</code> ' . __('to get a list of available commands.', 'wp-queue') . '</p>' .
+        return '<h2>'.__('WP-CLI Commands', 'wp-queue').'</h2>'.
+            '<p>'.__('Run', 'wp-queue').' <code>wp help queue</code> '.__('to get a list of available commands.', 'wp-queue').'</p>'.
             '<pre><code># Queue commands
 wp queue status              # Show queue status
 wp queue work [queue]        # Process jobs from queue
@@ -130,31 +129,31 @@ wp queue system              # Show system status</code></pre>';
 
     protected function getHelpSidebar(): string
     {
-        return '<p><strong>' . __('For more information:', 'wp-queue') . '</strong></p>' .
-            '<p><a href="https://github.com/rwsite/wp-queue" target="_blank">' . __('GitHub Repository', 'wp-queue') . '</a></p>' .
-            '<p><a href="https://github.com/rwsite/wp-queue/issues" target="_blank">' . __('Report Issues', 'wp-queue') . '</a></p>' .
-            '<p><a href="https://rwsite.ru" target="_blank">' . __('Author Website', 'wp-queue') . '</a></p>';
+        return '<p><strong>'.__('For more information:', 'wp-queue').'</strong></p>'.
+            '<p><a href="https://github.com/rwsite/wp-queue" target="_blank">'.__('GitHub Repository', 'wp-queue').'</a></p>'.
+            '<p><a href="https://github.com/rwsite/wp-queue/issues" target="_blank">'.__('Report Issues', 'wp-queue').'</a></p>'.
+            '<p><a href="https://rwsite.ru" target="_blank">'.__('Author Website', 'wp-queue').'</a></p>';
     }
 
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'toplevel_page_wp-queue') {
+        if ($hook !== 'tools_page_wp-queue') {
             return;
         }
 
         wp_enqueue_style(
             'wp-queue-admin',
-            WP_QUEUE_URL . 'assets/css/admin.css',
+            WP_QUEUE_URL.'assets/css/admin.css',
             [],
-            WP_QUEUE_VERSION
+            WP_QUEUE_VERSION,
         );
 
         wp_enqueue_script(
             'wp-queue-admin',
-            WP_QUEUE_URL . 'assets/js/admin.js',
+            WP_QUEUE_URL.'assets/js/admin.js',
             ['jquery'],
             WP_QUEUE_VERSION,
-            true
+            true,
         );
 
         wp_localize_script('wp-queue-admin', 'wpQueue', [
@@ -168,6 +167,27 @@ wp queue system              # Show system status</code></pre>';
                 'error' => __('An error occurred', 'wp-queue'),
             ],
         ]);
+
+        // Добавляем inline script для подсветки активного пункта меню
+        wp_add_inline_script('wp-queue-admin', "
+            jQuery(document).ready(function($) {
+                // Подсвечиваем пункт меню WP Queue как активный
+                var currentUrl = window.location.href;
+                var wpQueueMenuItem = $('a[href*=\"page=wp-queue\"]');
+                
+                if (currentUrl.includes('page=wp-queue')) {
+                    // Удаляем класс current у всех пунктов подменю Инструменты
+                    $('#menu-tools ul.wp-submenu li').removeClass('current');
+                    
+                    // Добавляем класс current к пункту WP Queue
+                    wpQueueMenuItem.parent().addClass('current');
+                    
+                    // Также подсвечиваем родительский пункт меню
+                    $('#menu-tools').addClass('wp-has-current-submenu wp-menu-open');
+                    $('#menu-tools > a').addClass('wp-has-current-submenu');
+                }
+            });
+        ");
     }
 
     public function renderPage(): void
@@ -205,7 +225,7 @@ wp queue system              # Show system status</code></pre>';
                     'system' => $this->renderSystemTab(),
                     default => $this->renderDashboardTab(),
                 };
-                ?>
+        ?>
             </div>
         </div>
         <?php
@@ -248,7 +268,7 @@ wp queue system              # Show system status</code></pre>';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($queues as $name => $data) : ?>
+                    <?php foreach ($queues as $name => $data) { ?>
                         <tr>
                             <td><strong><?php echo esc_html($name); ?></strong></td>
                             <td><?php echo esc_html((string) $data['size']); ?></td>
@@ -258,21 +278,21 @@ wp queue system              # Show system status</code></pre>';
                                 </span>
                             </td>
                             <td>
-                                <?php if ($data['status'] === 'paused') : ?>
+                                <?php if ($data['status'] === 'paused') { ?>
                                     <button class="button button-small wp-queue-action" data-action="resume" data-queue="<?php echo esc_attr($name); ?>">
                                         <?php echo esc_html__('Resume', 'wp-queue'); ?>
                                     </button>
-                                <?php else : ?>
+                                <?php } else { ?>
                                     <button class="button button-small wp-queue-action" data-action="pause" data-queue="<?php echo esc_attr($name); ?>">
                                         <?php echo esc_html__('Pause', 'wp-queue'); ?>
                                     </button>
-                                <?php endif; ?>
+                                <?php } ?>
                                 <button class="button button-small wp-queue-action" data-action="clear" data-queue="<?php echo esc_attr($name); ?>">
                                     <?php echo esc_html__('Clear', 'wp-queue'); ?>
                                 </button>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </tbody>
             </table>
 
@@ -300,14 +320,14 @@ wp queue system              # Show system status</code></pre>';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($jobs)) : ?>
+                    <?php if (empty($jobs)) { ?>
                         <tr>
                             <td colspan="5"><?php echo esc_html__('No scheduled jobs found.', 'wp-queue'); ?></td>
                         </tr>
-                    <?php else : ?>
-                        <?php foreach ($jobs as $jobClass => $scheduled) : ?>
+                    <?php } else { ?>
+                        <?php foreach ($jobs as $jobClass => $scheduled) { ?>
                             <?php
-                            $hook = 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', (new \ReflectionClass($jobClass))->getShortName()));
+                            $hook = 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', (new \ReflectionClass($jobClass))->getShortName()));
                             $nextRun = wp_next_scheduled($hook);
                             ?>
                             <tr>
@@ -315,12 +335,12 @@ wp queue system              # Show system status</code></pre>';
                                 <td><?php echo esc_html($scheduled->getInterval() ?: '-'); ?></td>
                                 <td><?php echo esc_html($scheduled->getQueue() ?? 'default'); ?></td>
                                 <td>
-                                    <?php if ($nextRun) : ?>
+                                    <?php if ($nextRun) { ?>
                                         <?php echo esc_html(human_time_diff($nextRun, time())); ?>
                                         <?php echo $nextRun > time() ? esc_html__('from now', 'wp-queue') : esc_html__('ago (overdue)', 'wp-queue'); ?>
-                                    <?php else : ?>
+                                    <?php } else { ?>
                                         -
-                                    <?php endif; ?>
+                                    <?php } ?>
                                 </td>
                                 <td>
                                     <button class="button button-small wp-queue-run-job" data-job="<?php echo esc_attr($jobClass); ?>">
@@ -328,8 +348,8 @@ wp queue system              # Show system status</code></pre>';
                                     </button>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <?php } ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -377,12 +397,12 @@ wp queue system              # Show system status</code></pre>';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($logs)) : ?>
+                    <?php if (empty($logs)) { ?>
                         <tr>
                             <td colspan="5"><?php echo esc_html__('No logs found.', 'wp-queue'); ?></td>
                         </tr>
-                    <?php else : ?>
-                        <?php foreach ($logs as $log) : ?>
+                    <?php } else { ?>
+                        <?php foreach ($logs as $log) { ?>
                             <tr>
                                 <td><?php echo esc_html(wp_date('Y-m-d H:i:s', $log['timestamp'])); ?></td>
                                 <td>
@@ -394,8 +414,8 @@ wp queue system              # Show system status</code></pre>';
                                 <td><?php echo esc_html($log['queue']); ?></td>
                                 <td><?php echo esc_html($log['message'] ?? '-'); ?></td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <?php } ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -416,12 +436,12 @@ wp queue system              # Show system status</code></pre>';
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($logs)) : ?>
+                <?php if (empty($logs)) { ?>
                     <tr>
                         <td colspan="3"><?php echo esc_html__('No recent activity.', 'wp-queue'); ?></td>
                     </tr>
-                <?php else : ?>
-                    <?php foreach ($logs as $log) : ?>
+                <?php } else { ?>
+                    <?php foreach ($logs as $log) { ?>
                         <tr>
                             <td><?php echo esc_html(wp_date('H:i:s', $log['timestamp'])); ?></td>
                             <td>
@@ -432,14 +452,14 @@ wp queue system              # Show system status</code></pre>';
                                     'retrying' => '↻',
                                     default => '⟳',
                                 };
-                                ?>
+                        ?>
                                 <span class="log-icon log-<?php echo esc_attr($log['status']); ?>"><?php echo esc_html($icon); ?></span>
                                 <?php echo esc_html($log['status']); ?>
                             </td>
                             <td><code><?php echo esc_html(class_basename($log['job_class'])); ?></code></td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                    <?php } ?>
+                <?php } ?>
             </tbody>
         </table>
         <?php
@@ -456,7 +476,7 @@ wp queue system              # Show system status</code></pre>';
 
         // Find all queue options
         $results = $wpdb->get_col(
-            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_jobs_%'"
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_jobs_%'",
         );
 
         foreach ($results as $optionName) {
@@ -507,7 +527,7 @@ wp queue system              # Show system status</code></pre>';
     {
         $monitor = new CronMonitor();
         $filter = sanitize_key($_GET['filter'] ?? 'all');
-        
+
         $events = match ($filter) {
             'wordpress' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'wordpress'),
             'woocommerce' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'woocommerce'),
@@ -515,7 +535,7 @@ wp queue system              # Show system status</code></pre>';
             'plugin' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'plugin'),
             default => $monitor->getAllEvents(),
         };
-        
+
         $stats = $monitor->getStats();
 
         ?>
@@ -529,12 +549,12 @@ wp queue system              # Show system status</code></pre>';
                     <span class="stat-number"><?php echo esc_html((string) $stats['overdue']); ?></span>
                     <span class="stat-label"><?php echo esc_html__('Overdue', 'wp-queue'); ?></span>
                 </div>
-                <?php foreach ($stats['by_source'] as $source => $count) : ?>
+                <?php foreach ($stats['by_source'] as $source => $count) { ?>
                     <div class="stat-card">
                         <span class="stat-number"><?php echo esc_html((string) $count); ?></span>
                         <span class="stat-label"><?php echo esc_html(ucfirst($source)); ?></span>
                     </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
 
             <div class="tablenav top">
@@ -568,25 +588,25 @@ wp queue system              # Show system status</code></pre>';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($events)) : ?>
+                    <?php if (empty($events)) { ?>
                         <tr>
                             <td colspan="5"><?php echo esc_html__('No cron events found.', 'wp-queue'); ?></td>
                         </tr>
-                    <?php else : ?>
-                        <?php foreach ($events as $event) : ?>
+                    <?php } else { ?>
+                        <?php foreach ($events as $event) { ?>
                             <tr class="<?php echo $event['is_overdue'] ? 'wp-queue-overdue' : ''; ?>">
                                 <td>
                                     <code><?php echo esc_html($event['hook']); ?></code>
-                                    <?php if (! empty($event['args'])) : ?>
+                                    <?php if (! empty($event['args'])) { ?>
                                         <br><small><?php echo esc_html(wp_json_encode($event['args'])); ?></small>
-                                    <?php endif; ?>
+                                    <?php } ?>
                                 </td>
                                 <td>
-                                    <?php if ($event['is_overdue']) : ?>
+                                    <?php if ($event['is_overdue']) { ?>
                                         <span class="status-badge status-failed"><?php echo esc_html__('Overdue', 'wp-queue'); ?></span>
-                                    <?php else : ?>
+                                    <?php } else { ?>
                                         <?php echo esc_html($event['next_run']); ?>
-                                    <?php endif; ?>
+                                    <?php } ?>
                                 </td>
                                 <td><?php echo esc_html($event['schedule'] ?: __('Single', 'wp-queue')); ?></td>
                                 <td>
@@ -625,13 +645,13 @@ wp queue system              # Show system status</code></pre>';
                                     </button>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <?php } ?>
+                    <?php } ?>
                 </tbody>
             </table>
 
             <?php $paused = $monitor->getPaused(); ?>
-            <?php if (! empty($paused)) : ?>
+            <?php if (! empty($paused)) { ?>
                 <h2><?php echo esc_html__('Paused Events', 'wp-queue'); ?></h2>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
@@ -643,7 +663,7 @@ wp queue system              # Show system status</code></pre>';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($paused as $event) : ?>
+                        <?php foreach ($paused as $event) { ?>
                             <tr>
                                 <td><code><?php echo esc_html($event['hook']); ?></code></td>
                                 <td><?php echo esc_html($event['schedule'] ?: __('Single', 'wp-queue')); ?></td>
@@ -656,10 +676,10 @@ wp queue system              # Show system status</code></pre>';
                                     </button>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </tbody>
                 </table>
-            <?php endif; ?>
+            <?php } ?>
 
             <h2><?php echo esc_html__('Registered Schedules', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">
@@ -671,13 +691,13 @@ wp queue system              # Show system status</code></pre>';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($monitor->getSchedules() as $name => $schedule) : ?>
+                    <?php foreach ($monitor->getSchedules() as $name => $schedule) { ?>
                         <tr>
                             <td><code><?php echo esc_html($name); ?></code></td>
                             <td><?php echo esc_html(human_time_diff(0, $schedule['interval'])); ?></td>
                             <td><?php echo esc_html($schedule['display']); ?></td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </tbody>
             </table>
 
@@ -694,11 +714,11 @@ wp queue system              # Show system status</code></pre>';
                             <label for="edit-schedule"><strong><?php echo esc_html__('Schedule', 'wp-queue'); ?></strong></label><br>
                             <select name="schedule" id="edit-schedule" class="regular-text">
                                 <option value="single"><?php echo esc_html__('Single (run once)', 'wp-queue'); ?></option>
-                                <?php foreach ($monitor->getSchedules() as $name => $schedule) : ?>
+                                <?php foreach ($monitor->getSchedules() as $name => $schedule) { ?>
                                     <option value="<?php echo esc_attr($name); ?>">
                                         <?php echo esc_html($schedule['display']); ?> (<?php echo esc_html($name); ?>)
                                     </option>
-                                <?php endforeach; ?>
+                                <?php } ?>
                             </select>
                         </p>
                         
@@ -721,20 +741,20 @@ wp queue system              # Show system status</code></pre>';
 
         ?>
         <div class="wp-queue-system">
-            <?php if ($health['status'] !== 'healthy') : ?>
+            <?php if ($health['status'] !== 'healthy') { ?>
                 <div class="notice notice-warning">
                     <p><strong><?php echo esc_html__('System Issues Detected:', 'wp-queue'); ?></strong></p>
                     <ul>
-                        <?php foreach ($health['issues'] as $issue) : ?>
+                        <?php foreach ($health['issues'] as $issue) { ?>
                             <li><?php echo esc_html($issue); ?></li>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </ul>
                 </div>
-            <?php else : ?>
+            <?php } else { ?>
                 <div class="notice notice-success">
                     <p><?php echo esc_html__('All systems are healthy.', 'wp-queue'); ?></p>
                 </div>
-            <?php endif; ?>
+            <?php } ?>
 
             <h2><?php echo esc_html__('Environment', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">
@@ -775,39 +795,49 @@ wp queue system              # Show system status</code></pre>';
                     <tr>
                         <th scope="row"><?php echo esc_html__('WP-Cron Disabled', 'wp-queue'); ?></th>
                         <td>
-                            <?php if ($report['wp_cron_disabled']) : ?>
-                                <span class="status-badge status-failed"><?php echo esc_html__('Yes', 'wp-queue'); ?></span>
+                            <?php if ($report['wp_cron_disabled']) { ?>
+                                <span class="status-badge status-failed"><?php echo esc_html__('Disabled', 'wp-queue'); ?></span>
                                 <p class="description"><?php echo esc_html__('DISABLE_WP_CRON is set to true. Background tasks will not run automatically.', 'wp-queue'); ?></p>
-                            <?php else : ?>
-                                <span class="status-badge status-completed"><?php echo esc_html__('No', 'wp-queue'); ?></span>
-                            <?php endif; ?>
+                            <?php } else { ?>
+                                <span class="status-badge status-completed"><?php echo esc_html__('Enabled', 'wp-queue'); ?></span>
+                            <?php } ?>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><?php echo esc_html__('Alternate Cron', 'wp-queue'); ?></th>
                         <td>
-                            <?php if ($report['alternate_cron']) : ?>
-                                <span class="status-badge status-pending"><?php echo esc_html__('Enabled', 'wp-queue'); ?></span>
-                            <?php else : ?>
+                            <?php if ($report['alternate_cron']) { ?>
+                                <span class="status-badge status-completed"><?php echo esc_html__('Enabled', 'wp-queue'); ?></span>
+                            <?php } else { ?>
                                 <span class="status-badge status-idle"><?php echo esc_html__('Disabled', 'wp-queue'); ?></span>
-                            <?php endif; ?>
+                            <?php } ?>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><?php echo esc_html__('Loopback Request', 'wp-queue'); ?></th>
                         <td>
-                            <span class="status-badge status-<?php echo $report['loopback']['status'] === 'ok' ? 'completed' : 'failed'; ?>">
-                                <?php echo esc_html(ucfirst($report['loopback']['status'])); ?>
+                            <span class="status-badge status-<?php echo $report['loopback']['status'] === 'ok' ? 'completed' : ($report['loopback']['status'] === 'warning' ? 'pending' : 'failed'); ?>">
+                                <?php
+                                    $status_text = $report['loopback']['status'];
+        if ($status_text === 'ok') {
+            $status_text = __('OK', 'wp-queue');
+        } elseif ($status_text === 'warning') {
+            $status_text = __('Warning', 'wp-queue');
+        } else {
+            $status_text = __('Error', 'wp-queue');
+        }
+        echo esc_html($status_text);
+        ?>
                             </span>
-                            <?php if ($report['loopback']['status'] !== 'ok') : ?>
+                            <?php if ($report['loopback']['status'] !== 'ok') { ?>
                                 <p class="description"><?php echo esc_html($report['loopback']['message']); ?></p>
-                            <?php endif; ?>
+                            <?php } ?>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <?php if ($report['action_scheduler']['installed']) : ?>
+            <?php if ($report['action_scheduler']['installed']) { ?>
                 <h2><?php echo esc_html__('Action Scheduler', 'wp-queue'); ?></h2>
                 <table class="wp-list-table widefat fixed striped">
                     <tbody>
@@ -815,7 +845,7 @@ wp queue system              # Show system status</code></pre>';
                             <th scope="row"><?php echo esc_html__('Version', 'wp-queue'); ?></th>
                             <td><?php echo esc_html($report['action_scheduler']['version'] ?? 'Unknown'); ?></td>
                         </tr>
-                        <?php if ($report['action_scheduler']['stats']) : ?>
+                        <?php if ($report['action_scheduler']['stats']) { ?>
                             <tr>
                                 <th scope="row"><?php echo esc_html__('Pending Actions', 'wp-queue'); ?></th>
                                 <td><?php echo esc_html((string) $report['action_scheduler']['stats']['pending']); ?></td>
@@ -827,19 +857,19 @@ wp queue system              # Show system status</code></pre>';
                             <tr>
                                 <th scope="row"><?php echo esc_html__('Failed Actions', 'wp-queue'); ?></th>
                                 <td>
-                                    <?php if ($report['action_scheduler']['stats']['failed'] > 0) : ?>
+                                    <?php if ($report['action_scheduler']['stats']['failed'] > 0) { ?>
                                         <span class="status-badge status-failed">
                                             <?php echo esc_html((string) $report['action_scheduler']['stats']['failed']); ?>
                                         </span>
-                                    <?php else : ?>
+                                    <?php } else { ?>
                                         0
-                                    <?php endif; ?>
+                                    <?php } ?>
                                 </td>
                             </tr>
-                        <?php endif; ?>
+                        <?php } ?>
                     </tbody>
                 </table>
-            <?php endif; ?>
+            <?php } ?>
 
             <h2><?php echo esc_html__('Server Time', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">

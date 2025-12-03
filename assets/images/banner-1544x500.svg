@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1544" height="500" viewBox="0 0 1544 500">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1544" height="500" fill="url(#bgGrad)"/>
+  
+  <!-- Decorative pattern - queue items flow -->
+  <g opacity="0.08" fill="#ffffff">
+    <rect x="-40" y="60" width="160" height="40" rx="8"/>
+    <rect x="-40" y="120" width="120" height="40" rx="8"/>
+    <rect x="-40" y="180" width="80" height="40" rx="8"/>
+    <rect x="1384" y="280" width="160" height="40" rx="8"/>
+    <rect x="1424" y="340" width="120" height="40" rx="8"/>
+    <rect x="1464" y="400" width="80" height="40" rx="8"/>
+  </g>
+  
+  <!-- Icon area -->
+  <g transform="translate(160, 90)">
+    <!-- Queue items -->
+    <g fill="#ffffff">
+      <rect x="0" y="0" width="200" height="48" rx="10" opacity="1"/>
+      <rect x="0" y="68" width="160" height="48" rx="10" opacity="0.7"/>
+      <rect x="0" y="136" width="120" height="48" rx="10" opacity="0.4"/>
+    </g>
+    <!-- Checkmark -->
+    <path d="M20 24 L32 36 L56 12" stroke="#4F46E5" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Processing circle on item 2 -->
+    <circle cx="32" cy="92" r="14" fill="none" stroke="#4F46E5" stroke-width="5" stroke-dasharray="44 26" stroke-linecap="round"/>
+    <!-- Arrow -->
+    <g fill="none" stroke="url(#accentGrad)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M240 92 L300 92"/>
+      <path d="M280 72 L300 92 L280 112"/>
+    </g>
+    <!-- Clock -->
+    <circle cx="280" cy="200" r="50" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.9"/>
+    <path d="M280 164 L280 200 L306 218" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="640" y="220" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="96" font-weight="700" fill="#ffffff">WP Queue</text>
+  <text x="640" y="300" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="36" fill="#ffffff" opacity="0.85">Background Job Processing &amp; WP-Cron Management</text>
+  
+  <!-- Feature tags -->
+  <g transform="translate(640, 340)">
+    <rect x="0" y="0" width="180" height="50" rx="25" fill="#ffffff" opacity="0.15"/>
+    <text x="90" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle">Queue Jobs</text>
+    
+    <rect x="200" y="0" width="160" height="50" rx="25" fill="#ffffff" opacity="0.15"/>
+    <text x="280" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle">WP-Cron</text>
+    
+    <rect x="380" y="0" width="180" height="50" rx="25" fill="#ffffff" opacity="0.15"/>
+    <text x="470" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle">Monitoring</text>
+    
+    <rect x="580" y="0" width="200" height="50" rx="25" fill="#ffffff" opacity="0.15"/>
+    <text x="680" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#ffffff" text-anchor="middle">PHP 8.3+</text>
+  </g>
+</svg>

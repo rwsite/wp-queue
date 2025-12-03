@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use WPQueue\Events\JobFailed;
-use WPQueue\Events\JobProcessed;
-use WPQueue\Events\JobProcessing;
 use WPQueue\Jobs\Job;
 use WPQueue\QueueManager;
 use WPQueue\Worker;
@@ -44,7 +41,7 @@ class FailingWorkerJob extends Job
     }
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     WorkerTestJob::$handled = false;
     FailingWorkerJob::$failedCalled = false;
 
@@ -60,50 +57,50 @@ beforeEach(function () {
     ]);
 });
 
-describe('Worker', function () {
-    it('processes job from queue', function () {
+describe('Worker', function (): void {
+    it('processes job from queue', function (): void {
         // This test is simplified because full integration requires more mocking
         $manager = new QueueManager();
         $worker = new Worker($manager);
-        
+
         Brain\Monkey\Functions\stubs([
             'get_site_option' => fn () => [],
         ]);
-        
+
         // Empty queue returns false
         $processed = $worker->runNextJob('default');
-        
+
         expect($processed)->toBeFalse();
     });
 
-    it('returns false when queue is empty', function () {
+    it('returns false when queue is empty', function (): void {
         Brain\Monkey\Functions\expect('get_site_option')
             ->andReturn([]);
-        
+
         $manager = new QueueManager();
         $worker = new Worker($manager);
-        
+
         $processed = $worker->runNextJob('default');
-        
+
         expect($processed)->toBeFalse();
     });
 
-    it('respects memory limit', function () {
+    it('respects memory limit', function (): void {
         $manager = new QueueManager();
         $worker = new Worker($manager);
-        
+
         // Default memory limit is 128MB
         expect($worker->memoryExceeded())->toBeFalse();
     });
 
-    it('can set stop conditions', function () {
+    it('can set stop conditions', function (): void {
         $manager = new QueueManager();
         $worker = new Worker($manager);
-        
+
         $worker->setMaxJobs(10);
         $worker->setMaxTime(60);
         $worker->setMemoryLimit(256);
-        
+
         expect($worker->getMaxJobs())->toBe(10);
         expect($worker->getMaxTime())->toBe(60);
         expect($worker->getMemoryLimit())->toBe(256);

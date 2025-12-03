@@ -40,7 +40,7 @@ class ScheduledJob
      */
     public function everyMinutes(int $minutes): static
     {
-        $name = $minutes . 'min';
+        $name = $minutes.'min';
         $this->scheduler->addInterval($name, $minutes * 60, sprintf(__('Every %d Minutes', 'wp-queue'), $minutes));
 
         return $this->interval($name);

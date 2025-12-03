@@ -8,7 +8,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Load Composer autoloader
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__).'/vendor/autoload.php';
 
 // Load Brain Monkey
 \Brain\Monkey\setUp();

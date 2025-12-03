@@ -82,22 +82,35 @@ class SystemStatus
 
     /**
      * Check loopback request status.
-     * Uses the same method as WordPress Site Health.
+     * Uses the same method as WordPress Site Health (can_perform_loopback).
      *
      * @return array{status: string, message: string}
      */
     public function checkLoopback(): array
     {
-        $url = admin_url('admin-ajax.php');
+        $body = ['site-health' => 'loopback-test'];
+        $cookies = wp_unslash($_COOKIE);
+        $timeout = 10;
+        $headers = [
+            'Cache-Control' => 'no-cache',
+        ];
+
+        $sslverify = apply_filters('https_local_ssl_verify', false);
+
+        // Include Basic auth in loopback requests.
+        if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+            $headers['Authorization'] = 'Basic '.base64_encode(wp_unslash($_SERVER['PHP_AUTH_USER']).':'.wp_unslash($_SERVER['PHP_AUTH_PW']));
+        }
+
+        $url = site_url('wp-cron.php');
 
         $response = wp_remote_post($url, [
-            'timeout' => 10,
+            'body' => $body,
+            'cookies' => $cookies,
+            'headers' => $headers,
+            'timeout' => $timeout,
+            'sslverify' => $sslverify,
             'blocking' => true,
-            'sslverify' => apply_filters('https_local_ssl_verify', false),
-            'body' => [
-                'action' => 'health-check-loopback-requests',
-            ],
-            'cookies' => $_COOKIE,
         ]);
 
         if (is_wp_error($response)) {
@@ -109,25 +122,16 @@ class SystemStatus
 
         $code = wp_remote_retrieve_response_code($response);
 
-        if ($code >= 200 && $code < 300) {
+        if ($code !== 200) {
             return [
-                'status' => 'ok',
-                'message' => __('Loopback request successful', 'wp-queue'),
-            ];
-        }
-
-        // 404 is acceptable - it means the server responded but action doesn't exist
-        // This is still a successful loopback
-        if ($code === 404 || $code === 400) {
-            return [
-                'status' => 'ok',
-                'message' => __('Loopback request successful', 'wp-queue'),
+                'status' => 'warning',
+                'message' => sprintf(__('Unexpected response code: %d', 'wp-queue'), $code),
             ];
         }
 
         return [
-            'status' => 'warning',
-            'message' => sprintf(__('Unexpected response code: %d', 'wp-queue'), $code),
+            'status' => 'ok',
+            'message' => __('Loopback request successful', 'wp-queue'),
         ];
     }
 

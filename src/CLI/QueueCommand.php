@@ -6,7 +6,6 @@ namespace WPQueue\CLI;
 
 use WP_CLI;
 use WP_CLI\Utils;
-use WPQueue\Admin\CronMonitor;
 use WPQueue\Admin\SystemStatus;
 use WPQueue\WPQueue;
 
@@ -55,7 +54,7 @@ class QueueCommand
 
         $queues = [];
         $results = $wpdb->get_col(
-            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_jobs_%'"
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_jobs_%'",
         );
 
         foreach ($results as $optionName) {
@@ -300,8 +299,8 @@ class QueueCommand
             ['key' => 'PHP Version', 'value' => $report['php_version']],
             ['key' => 'WordPress Version', 'value' => $report['wp_version']],
             ['key' => 'Memory Limit', 'value' => $report['memory_limit_formatted']],
-            ['key' => 'Memory Usage', 'value' => $report['current_memory_formatted'] . ' (' . $report['memory_percent'] . '%)'],
-            ['key' => 'Max Execution Time', 'value' => $report['max_execution_time'] . 's'],
+            ['key' => 'Memory Usage', 'value' => $report['current_memory_formatted'].' ('.$report['memory_percent'].'%)'],
+            ['key' => 'Max Execution Time', 'value' => $report['max_execution_time'].'s'],
             ['key' => 'WP-Cron Disabled', 'value' => $report['wp_cron_disabled'] ? 'Yes' : 'No'],
             ['key' => 'Loopback Status', 'value' => $report['loopback']['status']],
             ['key' => 'Timezone', 'value' => $report['timezone']],

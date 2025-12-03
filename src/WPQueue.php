@@ -96,7 +96,7 @@ final class WPQueue
 
         // Load translations
         add_action('init', static function (): void {
-            load_plugin_textdomain('wp-queue', false, dirname(plugin_basename(WP_QUEUE_FILE)) . '/languages');
+            load_plugin_textdomain('wp-queue', false, dirname(plugin_basename(WP_QUEUE_FILE)).'/languages');
         });
     }
 
@@ -209,7 +209,7 @@ final class WPQueue
      */
     public static function isProcessing(string $queue = 'default'): bool
     {
-        return (bool) get_site_transient('wp_queue_lock_' . $queue);
+        return (bool) get_site_transient('wp_queue_lock_'.$queue);
     }
 
     /**
@@ -225,7 +225,7 @@ final class WPQueue
      */
     public static function pause(string $queue = 'default'): void
     {
-        update_site_option('wp_queue_status_' . $queue, 'paused');
+        update_site_option('wp_queue_status_'.$queue, 'paused');
     }
 
     /**
@@ -233,7 +233,7 @@ final class WPQueue
      */
     public static function resume(string $queue = 'default'): void
     {
-        delete_site_option('wp_queue_status_' . $queue);
+        delete_site_option('wp_queue_status_'.$queue);
     }
 
     /**
@@ -241,7 +241,7 @@ final class WPQueue
      */
     public static function isPaused(string $queue = 'default'): bool
     {
-        return get_site_option('wp_queue_status_' . $queue) === 'paused';
+        return get_site_option('wp_queue_status_'.$queue) === 'paused';
     }
 
     /**

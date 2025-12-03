@@ -9,10 +9,10 @@ declare(strict_types=1);
 */
 
 uses()
-    ->beforeEach(function () {
+    ->beforeEach(function (): void {
         \Brain\Monkey\setUp();
     })
-    ->afterEach(function () {
+    ->afterEach(function (): void {
         \Brain\Monkey\tearDown();
     })
     ->in('Unit', 'Feature');

@@ -81,7 +81,7 @@ class CronMonitor
     {
         return array_values(array_filter(
             $this->getAllEvents(),
-            fn ($event) => str_starts_with($event['hook'], $prefix)
+            fn ($event) => str_starts_with($event['hook'], $prefix),
         ));
     }
 
@@ -269,7 +269,7 @@ class CronMonitor
 
         // Store paused event
         $paused = get_option('wp_queue_paused_crons', []);
-        $key = md5($hook . serialize($args));
+        $key = md5($hook.serialize($args));
 
         $paused[$key] = [
             'hook' => $hook,
@@ -293,7 +293,7 @@ class CronMonitor
     public function resume(string $hook, array $args = []): bool
     {
         $paused = get_option('wp_queue_paused_crons', []);
-        $key = md5($hook . serialize($args));
+        $key = md5($hook.serialize($args));
 
         if (! isset($paused[$key])) {
             return false;
@@ -339,7 +339,7 @@ class CronMonitor
     public function isPaused(string $hook, array $args = []): bool
     {
         $paused = $this->getPaused();
-        $key = md5($hook . serialize($args));
+        $key = md5($hook.serialize($args));
 
         return isset($paused[$key]);
     }

@@ -157,7 +157,7 @@ class Scheduler
     {
         $name = (new ReflectionClass($jobClass))->getShortName();
 
-        return 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+        return 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
     }
 
     /**
@@ -206,16 +206,16 @@ class Scheduler
     protected function registerDefaultIntervals(): void
     {
         $this->intervals = [
-            'min' => ['interval' => 60, 'display' => __('Every Minute', 'wp-queue')],
-            '5min' => ['interval' => 5 * 60, 'display' => __('Every 5 Minutes', 'wp-queue')],
-            '10min' => ['interval' => 10 * 60, 'display' => __('Every 10 Minutes', 'wp-queue')],
-            '15min' => ['interval' => 15 * 60, 'display' => __('Every 15 Minutes', 'wp-queue')],
-            '30min' => ['interval' => 30 * 60, 'display' => __('Every 30 Minutes', 'wp-queue')],
-            '2hourly' => ['interval' => 2 * HOUR_IN_SECONDS, 'display' => __('Every 2 Hours', 'wp-queue')],
-            '3hourly' => ['interval' => 3 * HOUR_IN_SECONDS, 'display' => __('Every 3 Hours', 'wp-queue')],
-            '6hourly' => ['interval' => 6 * HOUR_IN_SECONDS, 'display' => __('Every 6 Hours', 'wp-queue')],
-            '8hourly' => ['interval' => 8 * HOUR_IN_SECONDS, 'display' => __('Every 8 Hours', 'wp-queue')],
-            '12hourly' => ['interval' => 12 * HOUR_IN_SECONDS, 'display' => __('Every 12 Hours', 'wp-queue')],
+            'min' => ['interval' => 60, 'display' => 'Every Minute'],
+            '5min' => ['interval' => 5 * 60, 'display' => 'Every 5 Minutes'],
+            '10min' => ['interval' => 10 * 60, 'display' => 'Every 10 Minutes'],
+            '15min' => ['interval' => 15 * 60, 'display' => 'Every 15 Minutes'],
+            '30min' => ['interval' => 30 * 60, 'display' => 'Every 30 Minutes'],
+            '2hourly' => ['interval' => 2 * HOUR_IN_SECONDS, 'display' => 'Every 2 Hours'],
+            '3hourly' => ['interval' => 3 * HOUR_IN_SECONDS, 'display' => 'Every 3 Hours'],
+            '6hourly' => ['interval' => 6 * HOUR_IN_SECONDS, 'display' => 'Every 6 Hours'],
+            '8hourly' => ['interval' => 8 * HOUR_IN_SECONDS, 'display' => 'Every 8 Hours'],
+            '12hourly' => ['interval' => 12 * HOUR_IN_SECONDS, 'display' => 'Every 12 Hours'],
         ];
     }
 }

@@ -35,7 +35,7 @@ class SettingsBasedJob extends Job
     public function handle(): void {}
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     Brain\Monkey\Functions\stubs([
         'add_filter' => fn () => true,
         'add_action' => fn () => true,
@@ -48,110 +48,110 @@ beforeEach(function () {
     ]);
 });
 
-describe('Scheduler', function () {
-    it('can schedule a job', function () {
+describe('Scheduler', function (): void {
+    it('can schedule a job', function (): void {
         $scheduler = new Scheduler();
         $scheduled = $scheduler->job(SchedulerTestJob::class);
-        
+
         expect($scheduled)->toBeInstanceOf(ScheduledJob::class);
         expect($scheduler->getJobs())->toHaveKey(SchedulerTestJob::class);
     });
 
-    it('applies attributes from job class', function () {
+    it('applies attributes from job class', function (): void {
         $scheduler = new Scheduler();
         $scheduled = $scheduler->job(SchedulerTestJob::class);
-        
+
         expect($scheduled->getInterval())->toBe('hourly');
         expect($scheduled->getQueue())->toBe('imports');
         expect($scheduled->getTimeout())->toBe(120);
         expect($scheduled->getRetries())->toBe(5);
     });
 
-    it('supports settings-based interval', function () {
+    it('supports settings-based interval', function (): void {
         Brain\Monkey\Functions\stubs([
             'get_option' => fn ($key, $default = false) => $key === 'my_custom_interval' ? '6hourly' : $default,
         ]);
-        
+
         $scheduler = new Scheduler();
         $scheduled = $scheduler->job(SettingsBasedJob::class);
-        
+
         expect($scheduled->getInterval())->toBe('6hourly');
     });
 
-    it('has default intervals', function () {
+    it('has default intervals', function (): void {
         $scheduler = new Scheduler();
         $intervals = $scheduler->registerIntervals([]);
-        
+
         expect($intervals)->toHaveKey('min');
         expect($intervals)->toHaveKey('5min');
         expect($intervals)->toHaveKey('2hourly');
         expect($intervals['min']['interval'])->toBe(60);
     });
 
-    it('can add custom intervals', function () {
+    it('can add custom intervals', function (): void {
         $scheduler = new Scheduler();
         $scheduler->addInterval('7min', 420, 'Every 7 Minutes');
-        
+
         $intervals = $scheduler->registerIntervals([]);
-        
+
         expect($intervals)->toHaveKey('7min');
         expect($intervals['7min']['interval'])->toBe(420);
     });
 });
 
-describe('ScheduledJob', function () {
-    it('supports fluent interval methods', function () {
+describe('ScheduledJob', function (): void {
+    it('supports fluent interval methods', function (): void {
         $scheduler = new Scheduler();
-        
+
         $job = new ScheduledJob('TestJob', $scheduler);
-        
+
         $job->everyMinute();
         expect($job->getInterval())->toBe('min');
-        
+
         $job->everyFiveMinutes();
         expect($job->getInterval())->toBe('5min');
-        
+
         $job->hourly();
         expect($job->getInterval())->toBe('hourly');
-        
+
         $job->daily();
         expect($job->getInterval())->toBe('daily');
-        
+
         $job->weekly();
         expect($job->getInterval())->toBe('weekly');
     });
 
-    it('supports custom minute intervals', function () {
+    it('supports custom minute intervals', function (): void {
         $scheduler = new Scheduler();
         $job = new ScheduledJob('TestJob', $scheduler);
-        
+
         $job->everyMinutes(7);
-        
+
         expect($job->getInterval())->toBe('7min');
-        
+
         $intervals = $scheduler->registerIntervals([]);
         expect($intervals)->toHaveKey('7min');
         expect($intervals['7min']['interval'])->toBe(420);
     });
 
-    it('supports conditional execution', function () {
+    it('supports conditional execution', function (): void {
         $scheduler = new Scheduler();
         $job = new ScheduledJob('TestJob', $scheduler);
-        
+
         $job->when(fn () => true);
         expect($job->shouldRun())->toBeTrue();
-        
+
         $job->when(fn () => false);
         expect($job->shouldRun())->toBeFalse();
     });
 
-    it('supports skip condition', function () {
+    it('supports skip condition', function (): void {
         $scheduler = new Scheduler();
         $job = new ScheduledJob('TestJob', $scheduler);
-        
+
         $job->skip(fn () => true);
         expect($job->shouldRun())->toBeFalse();
-        
+
         $job->skip(fn () => false);
         expect($job->shouldRun())->toBeTrue();
     });

@@ -11,7 +11,7 @@ use WPQueue\Queue\SyncQueue;
 class Dispatcher
 {
     public function __construct(
-        protected QueueManager $manager
+        protected QueueManager $manager,
     ) {}
 
     /**

@@ -12,7 +12,7 @@ class DispatchableJob extends Job
     public static bool $dispatched = false;
 
     public function __construct(
-        public readonly string $data = ''
+        public readonly string $data = '',
     ) {
         parent::__construct();
     }
@@ -23,7 +23,7 @@ class DispatchableJob extends Job
     }
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     DispatchableJob::$dispatched = false;
 
     Brain\Monkey\Functions\stubs([
@@ -33,51 +33,51 @@ beforeEach(function () {
     ]);
 });
 
-describe('Dispatcher', function () {
-    it('can dispatch job', function () {
+describe('Dispatcher', function (): void {
+    it('can dispatch job', function (): void {
         $manager = new QueueManager();
         $dispatcher = new Dispatcher($manager);
-        
+
         $job = new DispatchableJob('test');
         $pending = $dispatcher->dispatch($job);
-        
+
         expect($pending)->toBeInstanceOf(PendingDispatch::class);
     });
 
-    it('can dispatch job with delay', function () {
+    it('can dispatch job with delay', function (): void {
         $manager = new QueueManager();
         $dispatcher = new Dispatcher($manager);
-        
+
         $job = new DispatchableJob('test');
         $pending = $dispatcher->dispatch($job)->delay(60);
-        
+
         expect($pending->getJob()->getDelay())->toBe(60);
     });
 
-    it('can dispatch job to specific queue', function () {
+    it('can dispatch job to specific queue', function (): void {
         $manager = new QueueManager();
         $dispatcher = new Dispatcher($manager);
-        
+
         $job = new DispatchableJob('test');
         $pending = $dispatcher->dispatch($job)->onQueue('high');
-        
+
         expect($pending->getJob()->getQueue())->toBe('high');
     });
 
-    it('dispatches sync when using sync driver', function () {
+    it('dispatches sync when using sync driver', function (): void {
         $manager = new QueueManager();
         $manager->setDefaultDriver('sync');
         $dispatcher = new Dispatcher($manager);
-        
+
         $job = new DispatchableJob('sync-test');
         $dispatcher->dispatchSync($job);
-        
+
         expect(DispatchableJob::$dispatched)->toBeTrue();
     });
 });
 
-describe('PendingDispatch', function () {
-    it('sends job on destruct', function () {
+describe('PendingDispatch', function (): void {
+    it('sends job on destruct', function (): void {
         Brain\Monkey\Functions\stubs([
             'get_site_option' => fn () => [],
             'update_site_option' => fn () => true,
@@ -85,26 +85,26 @@ describe('PendingDispatch', function () {
 
         $manager = new QueueManager();
         $job = new DispatchableJob('test');
-        
+
         $pending = new PendingDispatch($job, $manager);
         // Trigger destruct
         unset($pending);
-        
+
         // Job should be queued
         expect(true)->toBeTrue();
     });
 
-    it('supports fluent api', function () {
+    it('supports fluent api', function (): void {
         $manager = new QueueManager();
         $job = new DispatchableJob('test');
-        
+
         $pending = (new PendingDispatch($job, $manager))
             ->onQueue('custom')
             ->delay(120);
-        
+
         expect($pending->getJob()->getQueue())->toBe('custom');
         expect($pending->getJob()->getDelay())->toBe(120);
-        
+
         $pending->cancel(); // Prevent dispatch in test
     });
 });

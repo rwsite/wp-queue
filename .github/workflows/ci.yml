@@ -47,35 +47,18 @@ jobs:
         run: ./vendor/bin/pest
 
   lint:
-    name: Code Style
+    name: Fix Code Style
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-          tools: composer:v2
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Laravel Pint Check
-        run: ./vendor/bin/pint --test
-
-  pint-fix:
-    name: Auto-fix Code Style
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: lint
-    steps:
       - name: Checkout
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -86,12 +69,10 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Laravel Pint Fix
+      - name: Laravel Pint
         run: ./vendor/bin/pint
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "style: apply Laravel Pint auto-format"
-          commit_user_name: github-actions[bot]
-          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use WPQueue\Admin\SystemStatus;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Brain\Monkey\Functions\stubs([
         '__' => fn ($text) => $text,
         'esc_html__' => fn ($text) => $text,
@@ -13,46 +13,46 @@ beforeEach(function () {
         'wp_remote_retrieve_response_code' => fn ($response) => $response['response']['code'] ?? 0,
         'is_wp_error' => fn ($thing) => false,
         'get_option' => fn ($key, $default = false) => $default,
-        'size_format' => fn ($bytes) => round($bytes / 1024 / 1024, 2) . ' MB',
+        'size_format' => fn ($bytes) => round($bytes / 1024 / 1024, 2).' MB',
     ]);
 });
 
-describe('SystemStatus', function () {
-    it('can check if WP-Cron is disabled', function () {
+describe('SystemStatus', function (): void {
+    it('can check if WP-Cron is disabled', function (): void {
         $status = new SystemStatus();
 
         // По умолчанию DISABLE_WP_CRON не определена
         expect($status->isWpCronDisabled())->toBeFalse();
     });
 
-    it('can check alternate cron status', function () {
+    it('can check alternate cron status', function (): void {
         $status = new SystemStatus();
 
         expect($status->isAlternateCron())->toBeFalse();
     });
 
-    it('can get PHP memory limit', function () {
+    it('can get PHP memory limit', function (): void {
         $status = new SystemStatus();
         $limit = $status->getMemoryLimit();
 
         expect($limit)->toBeGreaterThan(0);
     });
 
-    it('can get PHP max execution time', function () {
+    it('can get PHP max execution time', function (): void {
         $status = new SystemStatus();
         $time = $status->getMaxExecutionTime();
 
         expect($time)->toBeInt();
     });
 
-    it('can get current memory usage', function () {
+    it('can get current memory usage', function (): void {
         $status = new SystemStatus();
         $usage = $status->getCurrentMemoryUsage();
 
         expect($usage)->toBeGreaterThan(0);
     });
 
-    it('can get WordPress version', function () {
+    it('can get WordPress version', function (): void {
         global $wp_version;
         $wp_version = '6.4.2';
 
@@ -62,14 +62,14 @@ describe('SystemStatus', function () {
         expect($version)->toBe('6.4.2');
     });
 
-    it('can get PHP version', function () {
+    it('can get PHP version', function (): void {
         $status = new SystemStatus();
         $version = $status->getPhpVersion();
 
         expect($version)->toBe(PHP_VERSION);
     });
 
-    it('can check loopback status', function () {
+    it('can check loopback status', function (): void {
         Brain\Monkey\Functions\stubs([
             'admin_url' => fn () => 'http://example.com/wp-admin/admin-ajax.php',
             'apply_filters' => fn ($filter, $value) => $value,
@@ -84,8 +84,9 @@ describe('SystemStatus', function () {
         expect($loopback['status'])->toBe('ok');
     });
 
-    it('detects loopback failure', function () {
-        $wpError = new class {
+    it('detects loopback failure', function (): void {
+        $wpError = new class
+        {
             public function get_error_message(): string
             {
                 return 'Connection refused';
@@ -106,7 +107,7 @@ describe('SystemStatus', function () {
         expect($loopback['message'])->toContain('Connection refused');
     });
 
-    it('can get full system report', function () {
+    it('can get full system report', function (): void {
         Brain\Monkey\Functions\stubs([
             'admin_url' => fn () => 'http://example.com/wp-admin/admin-ajax.php',
             'apply_filters' => fn ($filter, $value) => $value,
@@ -133,14 +134,14 @@ describe('SystemStatus', function () {
         expect($report)->toHaveKey('loopback');
     });
 
-    it('can detect Action Scheduler', function () {
+    it('can detect Action Scheduler', function (): void {
         $status = new SystemStatus();
 
         // Action Scheduler не загружен в тестах
         expect($status->hasActionScheduler())->toBeFalse();
     });
 
-    it('can get timezone info', function () {
+    it('can get timezone info', function (): void {
         Brain\Monkey\Functions\expect('wp_timezone_string')
             ->once()
             ->andReturn('Europe/Moscow');

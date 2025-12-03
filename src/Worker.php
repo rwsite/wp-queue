@@ -27,7 +27,7 @@ class Worker
     protected ?LogStorage $logger = null;
 
     public function __construct(
-        protected QueueManager $manager
+        protected QueueManager $manager,
     ) {
         $this->startTime = time();
     }

@@ -1,0 +1,346 @@
+/**
+ * WP Queue Admin Styles
+ */
+
+.wp-queue-admin {
+    max-width: 1200px;
+}
+
+.wp-queue-content {
+    margin-top: 20px;
+}
+
+/* Stats Cards */
+.wp-queue-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+    border-left: 4px solid #2271b1;
+}
+
+.stat-card.stat-running {
+    border-left-color: #dba617;
+}
+
+.stat-card.stat-completed {
+    border-left-color: #00a32a;
+}
+
+.stat-card.stat-failed {
+    border-left-color: #d63638;
+}
+
+.stat-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1d2327;
+}
+
+.stat-label {
+    display: block;
+    font-size: 13px;
+    color: #50575e;
+    margin-top: 5px;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-idle {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.status-pending {
+    background: #fcf0e3;
+    color: #9a6700;
+}
+
+.status-running {
+    background: #e8f4fc;
+    color: #0073aa;
+}
+
+.status-paused {
+    background: #fcf0e3;
+    color: #996800;
+}
+
+.status-completed {
+    background: #e7f5e8;
+    color: #00a32a;
+}
+
+.status-failed {
+    background: #fcebea;
+    color: #d63638;
+}
+
+/* Log Icons */
+.log-icon {
+    display: inline-block;
+    width: 18px;
+    margin-right: 5px;
+}
+
+.log-completed {
+    color: #00a32a;
+}
+
+.log-failed {
+    color: #d63638;
+}
+
+.log-retrying {
+    color: #dba617;
+}
+
+.log-processing {
+    color: #2271b1;
+}
+
+/* Tables */
+.wp-queue-admin .wp-list-table code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.wp-queue-admin .button-small {
+    margin-right: 5px;
+}
+
+/* Tabs */
+.wp-queue-admin .nav-tab-wrapper {
+    margin-bottom: 0;
+}
+
+/* Dashboard */
+.wp-queue-dashboard h2 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+/* Jobs Tab */
+.wp-queue-jobs .wp-list-table {
+    margin-top: 20px;
+}
+
+/* Logs Tab */
+.wp-queue-logs .tablenav {
+    margin-bottom: 15px;
+}
+
+.wp-queue-logs .tablenav .button {
+    margin-right: 5px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .wp-queue-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+}
+
+/* Loading State */
+.wp-queue-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Toast Notifications */
+.wp-queue-toast {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    padding: 16px 24px;
+    background: #1d2327;
+    color: #fff;
+    border-radius: 6px;
+    z-index: 100001;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: wp-queue-slide-in 0.3s ease;
+    max-width: 400px;
+}
+
+.wp-queue-toast.success {
+    background: #00a32a;
+    border-left: 4px solid #006b1d;
+}
+
+.wp-queue-toast.error {
+    background: #d63638;
+    border-left: 4px solid #8b0000;
+}
+
+@keyframes wp-queue-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Source badges */
+.status-wordpress {
+    background: #0073aa;
+    color: #fff;
+}
+
+.status-woocommerce {
+    background: #96588a;
+    color: #fff;
+}
+
+.status-wp-queue {
+    background: #00a32a;
+    color: #fff;
+}
+
+.status-plugin {
+    background: #50575e;
+    color: #fff;
+}
+
+.status-woo2iiko {
+    background: #ff6b35;
+    color: #fff;
+}
+
+/* Overdue row */
+.wp-queue-overdue {
+    background-color: #fcf0f0 !important;
+}
+
+/* System tab */
+.wp-queue-system .notice {
+    margin: 20px 0;
+}
+
+.wp-queue-system h2 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.wp-queue-system th[scope="row"] {
+    width: 200px;
+    font-weight: 600;
+}
+
+.wp-queue-system .description {
+    color: #646970;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* Cron tab */
+.wp-queue-cron .tablenav {
+    margin: 20px 0 15px;
+}
+
+.wp-queue-cron h2 {
+    margin-top: 40px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.wp-queue-cron-actions {
+    white-space: normal;
+    min-width: 200px;
+}
+
+.wp-queue-cron-actions .button {
+    margin: 2px 3px 2px 0;
+    padding: 0 8px;
+    font-size: 11px;
+    line-height: 22px;
+    height: 24px;
+}
+
+/* Responsive table for cron */
+@media screen and (max-width: 1200px) {
+    .wp-queue-cron table th:nth-child(4),
+    .wp-queue-cron table td:nth-child(4) {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .wp-queue-cron table th:nth-child(3),
+    .wp-queue-cron table td:nth-child(3) {
+        display: none;
+    }
+}
+
+/* Modal */
+.wp-queue-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wp-queue-modal-content {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.wp-queue-modal-content h2 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.wp-queue-modal-content select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.wp-queue-modal-content .submit {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}

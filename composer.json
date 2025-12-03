@@ -1,0 +1,60 @@
+{
+    "name": "rwsite/wp-queue",
+    "description": "Background job processing and WP-Cron management for WordPress",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "keywords": [
+        "wordpress",
+        "queue",
+        "background-processing",
+        "cron",
+        "jobs",
+        "scheduler",
+        "wp-cron"
+    ],
+    "homepage": "https://github.com/rwsite/wp-queue",
+    "authors": [
+        {
+            "name": "Aleksei Tikhomirov",
+            "email": "admin@rwsite.ru",
+            "homepage": "https://rwsite.ru"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/rwsite/wp-queue/issues",
+        "source": "https://github.com/rwsite/wp-queue"
+    },
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "laravel/pint": "^1.18",
+        "mockery/mockery": "^1.6",
+        "brain/monkey": "^2.6",
+        "yoast/phpunit-polyfills": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WPQueue\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WPQueue\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:coverage": "pest --coverage",
+        "lint": "pint",
+        "lint:check": "pint --test"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

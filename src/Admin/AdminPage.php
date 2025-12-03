@@ -59,50 +59,36 @@ class AdminPage
     protected function getHelpTabAbout(): string
     {
         return '<h2>'.__('About WP Queue', 'wp-queue').' '.WP_QUEUE_VERSION.'</h2>'.
-            '<p>'.__('WP Queue is a scalable queue manager for WordPress background processing. It works by triggering hook events for execution at a specific time or in the future. Scheduled actions can also be scheduled for regular execution.', 'wp-queue').'</p>'.
-            '<h3>'.__('Features', 'wp-queue').'</h3>'.
+            '<p>'.__('WP Queue helps your site run heavy or regular tasks in the background (emails, synchronizations, cleanups) so that pages load faster for visitors.', 'wp-queue').'</p>'.
+            '<p>'.__('The plugin itself does not add new features to the frontend. It provides a reliable queue that other plugins or your custom code can use for background work.', 'wp-queue').'</p>'.
+            '<h3>'.__('What you can use it for', 'wp-queue').'</h3>'.
             '<ul>'.
-            '<li>'.__('Laravel-style job dispatching with PHP 8 attributes', 'wp-queue').'</li>'.
-            '<li>'.__('Multiple queue drivers (Database, Sync, Redis)', 'wp-queue').'</li>'.
-            '<li>'.__('Automatic retries with exponential backoff', 'wp-queue').'</li>'.
-            '<li>'.__('Job scheduling with cron expressions', 'wp-queue').'</li>'.
-            '<li>'.__('WP-Cron monitoring and management', 'wp-queue').'</li>'.
-            '<li>'.__('REST API for external integrations', 'wp-queue').'</li>'.
-            '</ul>';
+            '<li>'.__('Monitor which background jobs are queued and running right now.', 'wp-queue').'</li>'.
+            '<li>'.__('Quickly see if any jobs are failing and view recent log entries.', 'wp-queue').'</li>'.
+            '<li>'.__('Inspect and manage WP-Cron events for WP Queue and other plugins.', 'wp-queue').'</li>'.
+            '<li>'.__('Check basic system requirements that affect queue stability.', 'wp-queue').'</li>'.
+            '</ul>'.
+            '<h3>'.__('For developers', 'wp-queue').'</h3>'.
+            '<p>'.__('Developers can dispatch their own jobs to the queue, choose drivers (Database, Sync, Redis), configure retries and schedules. See the documentation and examples on GitHub for integration details.', 'wp-queue').'</p>';
     }
 
     protected function getHelpTabUsage(): string
     {
         return '<h2>'.__('Basic Usage', 'wp-queue').'</h2>'.
-            '<h3>'.__('Creating a Job', 'wp-queue').'</h3>'.
-            '<pre><code>use WPQueue\Jobs\Job;
-use WPQueue\Attributes\Queue;
-use WPQueue\Attributes\Retries;
-
-#[Queue(\'emails\')]
-#[Retries(3)]
-class SendEmailJob extends Job
-{
-    public function __construct(
-        private readonly string $email
-    ) {
-        parent::__construct();
-    }
-
-    public function handle(): void
-    {
-        wp_mail($this->email, \'Subject\', \'Body\');
-    }
-}</code></pre>'.
-            '<h3>'.__('Dispatching', 'wp-queue').'</h3>'.
-            '<pre><code>use WPQueue\WPQueue;
-
-// Dispatch immediately
-WPQueue::dispatch(new SendEmailJob(\'user@example.com\'));
-
-// Dispatch with delay
-WPQueue::dispatch(new SendEmailJob(\'user@example.com\'))
-    ->delay(300); // 5 minutes</code></pre>';
+            '<h3>'.__('For site administrators', 'wp-queue').'</h3>'.
+            '<ul>'.
+            '<li>'.__('Dashboard – quick overview of queues, number of jobs and recent activity.', 'wp-queue').'</li>'.
+            '<li>'.__('Scheduled Jobs – list of recurring background jobs added by your theme or plugins.', 'wp-queue').'</li>'.
+            '<li>'.__('Logs – history of completed and failed jobs that helps to diagnose problems.', 'wp-queue').'</li>'.
+            '<li>'.__('WP-Cron – list of cron events with the ability to run, pause or delete them.', 'wp-queue').'</li>'.
+            '<li>'.__('System – checks PHP version, WP-Cron status and other important settings.', 'wp-queue').'</li>'.
+            '</ul>'.
+            '<p>'.__('If you installed WP Queue because another plugin requires it, you usually do not need to configure anything here. Use these tabs mainly for monitoring and troubleshooting.', 'wp-queue').'</p>'.
+            '<h3>'.__('For developers', 'wp-queue').'</h3>'.
+            '<p>'.sprintf(
+                __('To add your own background jobs, use the WP Queue PHP API from your plugin or theme. You can dispatch jobs to different queues, set delays and retries. Full code examples are available in the <a href="%s" target="_blank">README on GitHub</a>.', 'wp-queue'),
+                esc_url('https://github.com/rwsite/wp-queue')
+            ).'</p>';
     }
 
     protected function getHelpTabCli(): string

@@ -9,6 +9,7 @@ beforeEach(function (): void {
         '__' => fn ($text) => $text,
         'esc_html__' => fn ($text) => $text,
         'home_url' => fn () => 'https://example.com',
+        'site_url' => fn () => 'http://example.com/wp-cron.php',
         'wp_remote_post' => fn () => ['response' => ['code' => 200]],
         'wp_remote_retrieve_response_code' => fn ($response) => $response['response']['code'] ?? 0,
         'is_wp_error' => fn ($thing) => false,
@@ -82,6 +83,21 @@ describe('SystemStatus', function (): void {
         $loopback = $status->checkLoopback();
 
         expect($loopback['status'])->toBe('ok');
+    });
+
+    it('detects unexpected response code as warning', function (): void {
+        Brain\Monkey\Functions\stubs([
+            'apply_filters' => fn ($filter, $value) => $value,
+            'wp_remote_post' => fn () => ['response' => ['code' => 400]],
+            'is_wp_error' => fn () => false,
+            'wp_remote_retrieve_response_code' => fn () => 400,
+        ]);
+
+        $status = new SystemStatus();
+        $loopback = $status->checkLoopback();
+
+        expect($loopback['status'])->toBe('warning');
+        expect($loopback['message'])->toContain('400');
     });
 
     it('detects loopback failure', function (): void {

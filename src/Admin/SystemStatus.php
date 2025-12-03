@@ -114,7 +114,9 @@ class SystemStatus
             $headers['Authorization'] = 'Basic '.base64_encode($user.':'.$pass);
         }
 
-        if (function_exists('admin_url')) {
+        if (function_exists('site_url')) {
+            $url = site_url('wp-cron.php');
+        } elseif (function_exists('admin_url')) {
             $url = admin_url('admin-ajax.php');
         } else {
             $url = 'http://127.0.0.1';

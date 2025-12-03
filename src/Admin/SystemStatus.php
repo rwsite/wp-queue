@@ -103,13 +103,8 @@ class SystemStatus
 
         // Include Basic auth in loopback requests.
         if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
-            $user = $_SERVER['PHP_AUTH_USER'];
-            $pass = $_SERVER['PHP_AUTH_PW'];
-
-            if (function_exists('wp_unslash')) {
-                $user = wp_unslash($user);
-                $pass = wp_unslash($pass);
-            }
+            $user = sanitize_text_field(wp_unslash($_SERVER['PHP_AUTH_USER']));
+            $pass = sanitize_text_field(wp_unslash($_SERVER['PHP_AUTH_PW']));
 
             $headers['Authorization'] = 'Basic '.base64_encode($user.':'.$pass);
         }
@@ -143,6 +138,7 @@ class SystemStatus
         if ($code !== 200) {
             return [
                 'status' => 'warning',
+                /* translators: %d: HTTP response code */
                 'message' => sprintf(__('Unexpected response code: %d', 'wp-queue'), $code),
             ];
         }
@@ -218,7 +214,7 @@ class SystemStatus
     public function getTimeInfo(): array
     {
         return [
-            'server_time' => date('Y-m-d H:i:s'),
+            'server_time' => wp_date('Y-m-d H:i:s'),
             'wp_time' => current_time('mysql'),
             'timezone' => $this->getTimezone(),
             'gmt_offset' => (float) get_option('gmt_offset', 0),
@@ -271,6 +267,7 @@ class SystemStatus
 
         $loopback = $this->checkLoopback();
         if ($loopback['status'] !== 'ok') {
+            /* translators: %s: loopback error message */
             $issues[] = sprintf(__('Loopback issue: %s', 'wp-queue'), $loopback['message']);
         }
 

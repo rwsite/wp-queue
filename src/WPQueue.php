@@ -94,10 +94,6 @@ final class WPQueue
             self::registerCliCommands();
         }
 
-        // Load translations
-        add_action('init', static function (): void {
-            load_plugin_textdomain('wp-queue', false, dirname(plugin_basename(WP_QUEUE_FILE)).'/languages');
-        });
     }
 
     /**

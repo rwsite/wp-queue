@@ -86,6 +86,7 @@ class AdminPage
             '<p>'.__('If you installed WP Queue because another plugin requires it, you usually do not need to configure anything here. Use these tabs mainly for monitoring and troubleshooting.', 'wp-queue').'</p>'.
             '<h3>'.__('For developers', 'wp-queue').'</h3>'.
             '<p>'.sprintf(
+                /* translators: %s: URL to GitHub repository */
                 __('To add your own background jobs, use the WP Queue PHP API from your plugin or theme. You can dispatch jobs to different queues, set delays and retries. Full code examples are available in the <a href="%s" target="_blank">README on GitHub</a>.', 'wp-queue'),
                 esc_url('https://github.com/rwsite/wp-queue'),
             ).'</p>';

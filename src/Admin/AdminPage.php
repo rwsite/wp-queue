@@ -87,7 +87,7 @@ class AdminPage
             '<h3>'.__('For developers', 'wp-queue').'</h3>'.
             '<p>'.sprintf(
                 __('To add your own background jobs, use the WP Queue PHP API from your plugin or theme. You can dispatch jobs to different queues, set delays and retries. Full code examples are available in the <a href="%s" target="_blank">README on GitHub</a>.', 'wp-queue'),
-                esc_url('https://github.com/rwsite/wp-queue')
+                esc_url('https://github.com/rwsite/wp-queue'),
             ).'</p>';
     }
 

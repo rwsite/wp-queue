@@ -4,200 +4,6 @@ declare(strict_types=1);
 
 namespace WPQueue\Admin;
 
-// Import WordPress functions if not available
-if (!function_exists('wp_unslash')) {
-    /**
-     * Unslashes values.
-     *
-     * @param mixed $value Value to unslash.
-     * @return mixed Unslashed value.
-     */
-    function wp_unslash($value) {
-        return stripslashes_deep($value);
-    }
-}
-
-if (!function_exists('site_url')) {
-    /**
-     * Retrieve the site URL for the current site.
-     *
-     * @param string $path Path relative to the site URL.
-     * @return string Site URL.
-     */
-    function site_url($path = '') {
-        $url = 'http://localhost';
-        if ($path) {
-            $url .= '/' . ltrim($path, '/');
-        }
-        return $url;
-    }
-}
-
-if (!function_exists('wp_remote_post')) {
-    /**
-     * Perform an HTTP POST request.
-     *
-     * @param string $url URL to retrieve.
-     * @param array $args Request arguments.
-     * @return array Response array.
-     */
-    function wp_remote_post($url, $args = []) {
-        return [
-            'response' => ['code' => 200, 'message' => 'OK'],
-            'body' => 'success',
-            'headers' => [],
-        ];
-    }
-}
-
-if (!function_exists('is_wp_error')) {
-    /**
-     * Check whether variable is a WordPress Error.
-     *
-     * @param mixed $thing Check if unknown variable is a WP_Error object.
-     * @return bool True if WP_Error, false if not.
-     */
-    function is_wp_error($thing) {
-        return false;
-    }
-}
-
-if (!function_exists('wp_remote_retrieve_response_code')) {
-    /**
-     * Retrieve only the response code from the raw response.
-     *
-     * @param array $response HTTP response.
-     * @return int The response code.
-     */
-    function wp_remote_retrieve_response_code($response) {
-        return $response['response']['code'] ?? 200;
-    }
-}
-
-if (!function_exists('wp_remote_retrieve_body')) {
-    /**
-     * Retrieve only the body from the raw response.
-     *
-     * @param array $response HTTP response.
-     * @return string The body of the response.
-     */
-    function wp_remote_retrieve_body($response) {
-        return $response['body'] ?? '';
-    }
-}
-
-if (!function_exists('apply_filters')) {
-    /**
-     * Calls the callback functions that have been added to a filter hook.
-     *
-     * @param string $hook_name The name of the filter hook.
-     * @param mixed $value The value to filter.
-     * @return mixed The filtered value after all hooked functions are applied to it.
-     */
-    function apply_filters($hook_name, $value) {
-        return $value;
-    }
-}
-
-if (!function_exists('get_option')) {
-    /**
-     * Retrieves an option value based on an option name.
-     *
-     * @param string $option Name of the option to retrieve.
-     * @param mixed $default Optional. Default value to return if the option does not exist.
-     * @return mixed Value set for the option.
-     */
-    function get_option($option, $default = false) {
-        return $default;
-    }
-}
-
-if (!function_exists('wp_get_theme')) {
-    /**
-     * Gets a WP_Theme object for a theme.
-     *
-     * @param string $stylesheet Optional. Directory name for the theme.
-     * @return WP_Theme Theme object.
-     */
-    function wp_get_theme($stylesheet = null) {
-        return new class {
-            public function get($key) {
-                switch ($key) {
-                    case 'Name':
-                        return 'Test Theme';
-                    case 'Version':
-                        return '1.0.0';
-                    default:
-                        return '';
-                }
-            }
-        };
-    }
-}
-
-if (!function_exists('get_bloginfo')) {
-    /**
-     * Retrieves information about the current site.
-     *
-     * @param string $show Site info to retrieve.
-     * @return string Mostly string values.
-     */
-    function get_bloginfo($show) {
-        switch ($show) {
-            case 'version':
-                return '6.0.0';
-            case 'url':
-                return 'http://localhost';
-            default:
-                return '';
-        }
-    }
-}
-
-/**
- * Deeply stripslashes values.
- *
- * @param mixed $value Value to stripslashes.
- * @return mixed Stripslashed value.
- */
-function stripslashes_deep($value) {
-    return map_deep($value, 'stripslashes_from_strings_only');
-}
-
-/**
- * Maps a function to all non-iterable elements of an array or an object.
- *
- * @param mixed $value The array, object, or scalar.
- * @param callable $callback The function to map.
- * @return mixed The value with the callback applied to all non-iterable elements.
- */
-function map_deep($value, $callback) {
-    if (is_array($value)) {
-        foreach ($value as $index => $item) {
-            $value[$index] = map_deep($item, $callback);
-        }
-    } elseif (is_object($value)) {
-        $object_vars = get_object_vars($value);
-        foreach ($object_vars as $property_name => $property_value) {
-            $value->$property_name = map_deep($property_value, $callback);
-        }
-    } else {
-        $value = call_user_func($callback, $value);
-    }
-
-    return $value;
-}
-
-/**
- * Strips slashes only from strings.
- *
- * @param mixed $value Value to strip slashes from.
- * @return mixed Stripslashed value.
- */
-function stripslashes_from_strings_only($value) {
-    return is_string($value) ? stripslashes($value) : $value;
-}
-
 class SystemStatus
 {
     /**
@@ -283,7 +89,11 @@ class SystemStatus
     public function checkLoopback(): array
     {
         $body = ['site-health' => 'loopback-test'];
-        $cookies = wp_unslash($_COOKIE);
+
+        $cookies = $_COOKIE ?? [];
+        if (function_exists('wp_unslash')) {
+            $cookies = wp_unslash($cookies);
+        }
         $timeout = 10;
         $headers = [
             'Cache-Control' => 'no-cache',
@@ -292,11 +102,23 @@ class SystemStatus
         $sslverify = apply_filters('https_local_ssl_verify', false);
 
         // Include Basic auth in loopback requests.
-        if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
-            $headers['Authorization'] = 'Basic '.base64_encode(wp_unslash($_SERVER['PHP_AUTH_USER']).':'.wp_unslash($_SERVER['PHP_AUTH_PW']));
+        if (isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
+            $user = $_SERVER['PHP_AUTH_USER'];
+            $pass = $_SERVER['PHP_AUTH_PW'];
+
+            if (function_exists('wp_unslash')) {
+                $user = wp_unslash($user);
+                $pass = wp_unslash($pass);
+            }
+
+            $headers['Authorization'] = 'Basic '.base64_encode($user.':'.$pass);
         }
 
-        $url = site_url('wp-cron.php');
+        if (function_exists('admin_url')) {
+            $url = admin_url('admin-ajax.php');
+        } else {
+            $url = 'http://127.0.0.1';
+        }
 
         $response = wp_remote_post($url, [
             'body' => $body,

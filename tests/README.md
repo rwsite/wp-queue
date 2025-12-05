@@ -14,12 +14,14 @@ tests/
 ## Типы тестов
 
 ### Unit-тесты
+
 - **Назначение**: Тестирование отдельных классов и методов в изоляции
 - **Окружение**: Brain Monkey (мок WordPress функций)
 - **Скорость**: Быстрые (~1-2 секунды)
 - **Запуск**: `composer test:unit`
 
 ### E2E/Integration тесты
+
 - **Назначение**: Тестирование полного цикла работы плагина
 - **Окружение**: Реальный WordPress
 - **Скорость**: Медленные (~10-30 секунд)
@@ -28,31 +30,37 @@ tests/
 ## Запуск тестов
 
 ### Все тесты
+
 ```bash
 composer test
 ```
 
 ### Только unit-тесты
+
 ```bash
 composer test:unit
 ```
 
 ### Только E2E тесты
+
 ```bash
 composer test:e2e
 ```
 
 ### С покрытием кода
+
 ```bash
 composer test:coverage
 ```
 
 ### Конкретный тест
+
 ```bash
 vendor/bin/pest tests/Feature/QueueIntegrationTest.php
 ```
 
 ### Конкретный тест-кейс
+
 ```bash
 vendor/bin/pest --filter="полный цикл"
 ```
@@ -60,7 +68,9 @@ vendor/bin/pest --filter="полный цикл"
 ## E2E тесты
 
 ### QueueIntegrationTest.php
+
 Тестирует основной функционал очередей:
+
 - ✅ Полный цикл: dispatch → queue → process → complete
 - ✅ Задачи с delay
 - ✅ Повторные попытки при ошибках
@@ -74,7 +84,9 @@ vendor/bin/pest --filter="полный цикл"
 - ✅ Сериализация пользовательских данных
 
 ### SchedulerIntegrationTest.php
+
 Тестирует планировщик задач:
+
 - ✅ Регистрация задач с атрибутом #[Schedule]
 - ✅ Стандартные интервалы (hourly, daily, weekly, monthly)
 - ✅ Кастомные интервалы
@@ -83,7 +95,9 @@ vendor/bin/pest --filter="полный цикл"
 - ✅ Отмена запланированных задач
 
 ### RestApiIntegrationTest.php
+
 Тестирует REST API эндпоинты:
+
 - ✅ GET /queues - список очередей
 - ✅ GET /queues/{queue} - информация об очереди
 - ✅ POST /queues/{queue}/pause - пауза очереди
@@ -96,7 +110,9 @@ vendor/bin/pest --filter="полный цикл"
 - ✅ Аутентификация и права доступа
 
 ### CliIntegrationTest.php
+
 Тестирует WP-CLI команды:
+
 - ✅ queue:work - обработка очереди
 - ✅ queue:list - список очередей
 - ✅ queue:clear - очистка очереди
@@ -119,49 +135,38 @@ vendor/bin/pest --filter="полный цикл"
 ## Настройка окружения
 
 ### Локальная разработка
+
+Для локальной разработки достаточно unit-тестов:
+
 ```bash
-# Убедитесь что WordPress доступен
-cd /path/to/wordpress
-php -S localhost:8000
-
-# Запустите тесты
-cd wp-content/plugins/wp-queue
-composer test:e2e
+composer test:unit
 ```
 
-### Docker
-```bash
-# Запуск WordPress в Docker
-docker-compose up -d
+### CI/CD (GitHub Actions)
 
-# Запуск тестов в контейнере
-docker-compose exec wordpress composer test:e2e
-```
+E2E тесты запускаются автоматически в GitHub Actions:
 
-### CI/CD
-Для GitHub Actions используйте WordPress test suite:
-```yaml
-- name: Setup WordPress
-  run: |
-    bash bin/install-wp-tests.sh wordpress_test root '' localhost latest
+- WordPress latest + PHP 8.3
+- WordPress 6.6 + PHP 8.3
 
-- name: Run E2E tests
-  run: composer test:e2e
-```
+Конфигурация в `.github/workflows/ci.yml`.
 
 ## Отладка тестов
 
 ### Вывод дополнительной информации
+
 ```bash
 vendor/bin/pest --verbose
 ```
 
 ### Остановка на первой ошибке
+
 ```bash
 vendor/bin/pest --stop-on-failure
 ```
 
 ### Запуск с отладочной информацией
+
 ```bash
 vendor/bin/pest --debug
 ```
@@ -171,6 +176,7 @@ vendor/bin/pest --debug
 Цель: **80%+ покрытие**
 
 Текущее покрытие:
+
 - Unit-тесты: ~60%
 - E2E тесты: ~90%
 - Общее: ~75%
@@ -186,24 +192,28 @@ vendor/bin/pest --debug
 ## Troubleshooting
 
 ### Ошибка: WordPress не найден
+
 ```bash
 # Проверьте путь к WordPress в bootstrap-e2e.php
 $wp_root = dirname(__DIR__, 4);
 ```
 
 ### Ошибка: База данных недоступна
+
 ```bash
 # Проверьте wp-config.php
 # Убедитесь что база данных запущена
 ```
 
 ### Ошибка: Недостаточно прав
+
 ```bash
 # Проверьте права на запись
 chmod -R 755 wp-content/plugins/wp-queue
 ```
 
 ### Тесты падают случайно
+
 ```bash
 # Очистите кеш
 rm -rf .phpunit.cache

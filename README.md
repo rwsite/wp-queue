@@ -267,7 +267,7 @@ Health check and environment info:
 
 ## REST API
 
-```
+```http
 GET    /wp-json/wp-queue/v1/queues
 POST   /wp-json/wp-queue/v1/queues/{queue}/pause
 POST   /wp-json/wp-queue/v1/queues/{queue}/resume
@@ -392,72 +392,28 @@ add_action('wp_queue_schedule', fn($s) => $s->job(MyHourlyTask::class));
 
 ## Testing
 
-WP Queue имеет два типа тестов:
+WP Queue использует CI-first подход к тестированию.
 
-### Unit Tests (быстрые)
+### Unit Tests (локально)
 
-Изолированные тесты без WordPress окружения:
+Быстрые изолированные тесты без WordPress окружения:
 
 ```bash
 composer test:unit
 ```
 
-### E2E Tests (полные)
+### E2E Tests (GitHub Actions)
 
-Интеграционные тесты с реальным WordPress:
-
-#### В GitHub Actions
-
-Автоматически запускаются при push в `main`/`develop` ветки:
+Интеграционные тесты с реальным WordPress запускаются автоматически в CI:
 
 - ✅ WordPress latest + PHP 8.3
 - ✅ WordPress 6.6 + PHP 8.3
 
-#### Локально с Docker
+E2E тесты выполняются при каждом push в `main`/`develop` ветки и в pull requests.
+
+### Проверка кода
 
 ```bash
-# Автоматический запуск с Docker
-composer test:e2e:docker
-
-# Или вручную:
-# Запуск WordPress окружения
-docker-compose up -d
-
-# Дождаться загрузки (WordPress + MySQL)
-sleep 30
-
-# Запуск E2E тестов
-composer test:e2e
-```
-
-#### Ручной запуск
-
-Если у вас уже есть WordPress установка:
-
-```bash
-# Установить WP-CLI
-curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-chmod +x wp-cli.phar
-sudo mv wp-cli.phar /usr/local/bin/wp
-
-# Настроить WordPress
-wp core download
-wp config create --dbname=wp_test --dbuser=root --dbpass=password
-wp core install --url=http://localhost --title="Test" --admin_user=admin --admin_email=admin@example.com
-
-# Активировать плагин
-wp plugin activate wp-queue
-
-# Запустить тесты
-WP_CORE_DIR=/path/to/wordpress composer test:e2e
-```
-
-### Запуск всех тестов
-
-```bash
-# Unit + E2E
-composer test
-
 # С покрытием кода
 composer test:coverage
 

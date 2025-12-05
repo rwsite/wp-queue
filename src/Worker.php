@@ -24,6 +24,8 @@ class Worker
 
     protected int $memoryLimit = 128;
 
+    protected bool $useBackoff = true;
+
     protected ?LogStorage $logger = null;
 
     public function __construct(
@@ -118,9 +120,21 @@ class Worker
      */
     protected function calculateBackoff(JobInterface $job): int
     {
+        if (! $this->useBackoff) {
+            return 0;
+        }
+
         $attempts = $job->getAttempts();
 
         return min(2 ** $attempts, 3600); // Max 1 hour
+    }
+
+    /**
+     * Enable or disable exponential backoff for retries.
+     */
+    public function setUseBackoff(bool $useBackoff): void
+    {
+        $this->useBackoff = $useBackoff;
     }
 
     /**
@@ -187,6 +201,7 @@ class Worker
         $this->jobsProcessed = 0;
         $this->maxJobs = 0;
         $this->maxTime = 0;
+        $this->useBackoff = true;
         $this->startTime = time();
     }
 

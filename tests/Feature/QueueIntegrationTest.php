@@ -87,6 +87,7 @@ test('задача с несколькими попытками при ошиб�
     WPQueue::dispatch($job);
 
     $worker = WPQueue::worker();
+    $worker->setUseBackoff(false); // Отключаем backoff для теста
 
     // Попытка 1
     $worker->runNextJob('default');

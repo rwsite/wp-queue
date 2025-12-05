@@ -268,6 +268,8 @@ test('CLI команда queue:retry повторяет проваленную �
 
     $job = new class($attempts) extends Job
     {
+        protected int &$attempts;
+
         public function __construct(private int &$attempts)
         {
             parent::__construct();

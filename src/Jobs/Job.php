@@ -27,6 +27,37 @@ abstract class Job implements JobInterface, ShouldQueue
     {
         $this->id = $this->generateId();
         $this->createdAt = time();
+        $this->applyAttributes();
+    }
+
+    /**
+     * Apply PHP 8 attributes to job properties
+     */
+    private function applyAttributes(): void
+    {
+        $reflection = new \ReflectionClass($this);
+        $attributes = $reflection->getAttributes();
+
+        foreach ($attributes as $attribute) {
+            $name = $attribute->getName();
+
+            if ($name === 'WPQueue\Attributes\Queue') {
+                $args = $attribute->getArguments();
+                if (! empty($args[0])) {
+                    $this->queue = $args[0];
+                }
+            } elseif ($name === 'WPQueue\Attributes\Timeout') {
+                $args = $attribute->getArguments();
+                if (! empty($args[0])) {
+                    $this->timeout = (int) $args[0];
+                }
+            } elseif ($name === 'WPQueue\Attributes\Retries') {
+                $args = $attribute->getArguments();
+                if (! empty($args[0])) {
+                    $this->maxAttempts = (int) $args[0];
+                }
+            }
+        }
     }
 
     abstract public function handle(): void;

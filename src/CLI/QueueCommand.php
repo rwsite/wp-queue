@@ -103,13 +103,14 @@ class QueueCommand
      * [--memory=<memory>]
      * : Memory limit in MB.
      * ---
-     * default: 128
+     * default: 256
      * ---
      *
      * ## EXAMPLES
      *
      *     wp queue work
      *     wp queue work emails --limit=50
+     *     wp queue work imports --memory=512
      *
      * @when after_wp_load
      */
@@ -117,9 +118,12 @@ class QueueCommand
     {
         $queue = $args[0] ?? 'default';
         $limit = (int) ($assocArgs['limit'] ?? 100);
-        $memory = (int) ($assocArgs['memory'] ?? 128);
 
-        WP_CLI::log("Processing jobs from queue: {$queue}");
+        // Get default memory limit from WordPress
+        $defaultMemory = $this->getDefaultMemoryLimit();
+        $memory = (int) ($assocArgs['memory'] ?? $defaultMemory);
+
+        WP_CLI::log("Processing jobs from queue: {$queue} (memory limit: {$memory}MB, WordPress default: {$defaultMemory}MB)");
 
         $worker = WPQueue::worker();
         $worker->setMemoryLimit($memory);
@@ -318,5 +322,58 @@ class QueueCommand
                 WP_CLI::log("  - {$issue}");
             }
         }
+    }
+
+    /**
+     * Get default memory limit from WordPress configuration.
+     * Uses WP_MAX_MEMORY_LIMIT if available, otherwise falls back to WP_MEMORY_LIMIT.
+     */
+    protected function getDefaultMemoryLimit(): int
+    {
+        // If WP_MAX_MEMORY_LIMIT is defined, use it (WordPress admin memory limit)
+        if (defined('WP_MAX_MEMORY_LIMIT')) {
+            $limit = WP_MAX_MEMORY_LIMIT;
+        } elseif (defined('WP_MEMORY_LIMIT')) {
+            // Fall back to WP_MEMORY_LIMIT
+            $limit = WP_MEMORY_LIMIT;
+        } else {
+            // Last resort: use 256MB
+            $limit = '256M';
+        }
+
+        // Convert to bytes and then to MB
+        if (function_exists('wp_convert_hr_to_bytes')) {
+            $bytes = wp_convert_hr_to_bytes($limit);
+
+            return (int) ($bytes / 1024 / 1024);
+        }
+
+        // Fallback conversion if wp_convert_hr_to_bytes is not available
+        return $this->convertToMB($limit);
+    }
+
+    /**
+     * Convert human-readable size to MB.
+     * Fallback if wp_convert_hr_to_bytes is not available.
+     */
+    protected function convertToMB(string $value): int
+    {
+        $value = strtoupper(trim($value));
+        $multiplier = 1;
+
+        if (str_ends_with($value, 'G')) {
+            $multiplier = 1024 * 1024 * 1024;
+            $value = substr($value, 0, -1);
+        } elseif (str_ends_with($value, 'M')) {
+            $multiplier = 1024 * 1024;
+            $value = substr($value, 0, -1);
+        } elseif (str_ends_with($value, 'K')) {
+            $multiplier = 1024;
+            $value = substr($value, 0, -1);
+        }
+
+        $bytes = (int) $value * $multiplier;
+
+        return (int) ($bytes / 1024 / 1024);
     }
 }

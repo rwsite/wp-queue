@@ -54,9 +54,20 @@ class DatabaseQueue implements QueueInterface
                 $jobs[$id]['reserved_at'] = $now;
                 $this->saveQueue($queue, $jobs);
 
-                $job = unserialize($data['payload']);
-                if ($job instanceof JobInterface) {
-                    return $job;
+                try {
+                    $job = unserialize($data['payload']);
+                    if ($job instanceof JobInterface) {
+                        return $job;
+                    }
+                } catch (\Throwable $e) {
+                    error_log(sprintf(
+                        'WP Queue: Failed to unserialize job %s: %s',
+                        $id,
+                        $e->getMessage(),
+                    ));
+                    // Release the job back to the queue for retry
+                    $jobs[$id]['reserved_at'] = null;
+                    $this->saveQueue($queue, $jobs);
                 }
             }
         }

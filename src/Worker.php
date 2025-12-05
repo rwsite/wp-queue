@@ -22,7 +22,7 @@ class Worker
 
     protected int $maxTime = 0;
 
-    protected int $memoryLimit = 128;
+    protected int $memoryLimit;
 
     protected bool $useBackoff = true;
 
@@ -32,6 +32,60 @@ class Worker
         protected QueueManager $manager,
     ) {
         $this->startTime = time();
+        $this->memoryLimit = $this->getDefaultMemoryLimit();
+    }
+
+    /**
+     * Get default memory limit from WordPress configuration.
+     * Uses WP_MAX_MEMORY_LIMIT if available, otherwise falls back to WP_MEMORY_LIMIT.
+     */
+    protected function getDefaultMemoryLimit(): int
+    {
+        // If WP_MAX_MEMORY_LIMIT is defined, use it (WordPress admin memory limit)
+        if (defined('WP_MAX_MEMORY_LIMIT')) {
+            $limit = WP_MAX_MEMORY_LIMIT;
+        } elseif (defined('WP_MEMORY_LIMIT')) {
+            // Fall back to WP_MEMORY_LIMIT
+            $limit = WP_MEMORY_LIMIT;
+        } else {
+            // Last resort: use 256MB
+            $limit = '256M';
+        }
+
+        // Convert to bytes and then to MB
+        if (function_exists('wp_convert_hr_to_bytes')) {
+            $bytes = wp_convert_hr_to_bytes($limit);
+
+            return (int) ($bytes / 1024 / 1024);
+        }
+
+        // Fallback conversion if wp_convert_hr_to_bytes is not available
+        return $this->convertToMB($limit);
+    }
+
+    /**
+     * Convert human-readable size to MB.
+     * Fallback if wp_convert_hr_to_bytes is not available.
+     */
+    protected function convertToMB(string $value): int
+    {
+        $value = strtoupper(trim($value));
+        $multiplier = 1;
+
+        if (str_ends_with($value, 'G')) {
+            $multiplier = 1024 * 1024 * 1024;
+            $value = substr($value, 0, -1);
+        } elseif (str_ends_with($value, 'M')) {
+            $multiplier = 1024 * 1024;
+            $value = substr($value, 0, -1);
+        } elseif (str_ends_with($value, 'K')) {
+            $multiplier = 1024;
+            $value = substr($value, 0, -1);
+        }
+
+        $bytes = (int) $value * $multiplier;
+
+        return (int) ($bytes / 1024 / 1024);
     }
 
     /**
@@ -53,11 +107,15 @@ class Worker
     {
         // Check if queue is paused
         if (WPQueue::isPaused($queue)) {
+            error_log("WP Queue: Queue '{$queue}' is paused");
+
             return false;
         }
 
         // Check if we should stop before processing
         if ($this->shouldStop()) {
+            $this->logStopReason();
+
             return false;
         }
 
@@ -67,6 +125,8 @@ class Worker
         if ($job === null) {
             return false;
         }
+
+        error_log("WP Queue: Processing job from queue '{$queue}': ".get_class($job));
 
         return $this->process($job, $queue);
     }
@@ -88,9 +148,34 @@ class Worker
             $this->jobsProcessed++;
             $this->log('completed', $job);
 
+            // Check memory after job completion
+            $this->checkMemoryAfterJob($job, $queue);
+
             return true;
         } catch (Throwable $e) {
             return $this->handleJobException($job, $queue, $e);
+        }
+    }
+
+    /**
+     * Check memory usage after job completion and release job if memory is critical.
+     */
+    protected function checkMemoryAfterJob(JobInterface $job, string $queue): void
+    {
+        $usage = memory_get_usage(true) / 1024 / 1024;
+        $threshold = $this->memoryLimit * 0.85; // 85% threshold
+
+        if ($usage >= $threshold) {
+            $percent = ($usage / $this->memoryLimit) * 100;
+            error_log(sprintf(
+                'WP Queue: Memory usage critical after job completion: %.1fMB/%.1fMB (%.1f%%). Worker will stop after this job.',
+                $usage,
+                $this->memoryLimit,
+                $percent,
+            ));
+
+            // Force stop after this job
+            $this->maxJobs = $this->jobsProcessed;
         }
     }
 
@@ -163,6 +248,32 @@ class Worker
     }
 
     /**
+     * Log the reason why worker is stopping.
+     */
+    protected function logStopReason(): void
+    {
+        if ($this->maxJobs > 0 && $this->jobsProcessed >= $this->maxJobs) {
+            error_log("WP Queue: Stopping worker - max jobs reached ({$this->jobsProcessed}/{$this->maxJobs})");
+
+            return;
+        }
+
+        if ($this->maxTime > 0 && (time() - $this->startTime) >= $this->maxTime) {
+            $elapsed = time() - $this->startTime;
+            error_log("WP Queue: Stopping worker - max time exceeded ({$elapsed}s/{$this->maxTime}s)");
+
+            return;
+        }
+
+        if ($this->memoryExceeded()) {
+            $usage = memory_get_usage(true) / 1024 / 1024;
+            error_log("WP Queue: Stopping worker - memory limit exceeded ({$usage}MB/{$this->memoryLimit}MB). Jobs processed: {$this->jobsProcessed}");
+
+            return;
+        }
+    }
+
+    /**
      * Check if memory limit is exceeded.
      */
     public function memoryExceeded(): bool
@@ -180,6 +291,7 @@ class Worker
     public function setMaxTime(int $seconds): void
     {
         $this->maxTime = $seconds;
+        $this->startTime = time();
     }
 
     public function setMemoryLimit(int $megabytes): void

@@ -187,7 +187,7 @@ final class WPQueue
         $table = $wpdb->prefix.'queue_logs';
         $charsetCollate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE {$table} (
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             job_id varchar(64) NOT NULL,
             job_class varchar(255) NOT NULL,
@@ -202,11 +202,7 @@ final class WPQueue
             KEY created_at (created_at)
         ) {$charsetCollate};";
 
-        if (! function_exists('dbDelta')) {
-            require_once ABSPATH.'wp-admin/includes/upgrade.php';
-        }
-
-        \dbDelta($sql);
+        $wpdb->query($sql);
     }
 
     protected static function migrateLogsOption(): void

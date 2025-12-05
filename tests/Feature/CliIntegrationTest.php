@@ -35,6 +35,19 @@ beforeEach(function (): void {
 
     // Сброс состояния воркера для каждого теста
     WPQueue::worker()->reset();
+
+    // Очистка всех WP-Cron хуков для запланированных задач
+    remove_all_actions('wp_queue_hourly_scheduled_job');
+    remove_all_actions('wp_queue_daily_scheduled_job');
+    remove_all_actions('wp_queue_weekly_scheduled_job');
+    remove_all_actions('wp_queue_monthly_scheduled_job');
+    remove_all_actions('wp_queue_every_minute_job');
+    remove_all_actions('wp_queue_every_five_minutes_job');
+    remove_all_actions('wp_queue_every_ten_minutes_job');
+    remove_all_actions('wp_queue_every_thirty_minutes_job');
+    remove_all_actions('wp_queue_at_scheduled_job');
+    remove_all_actions('wp_queue_cron_scheduled_job');
+    remove_all_actions('wp_queue_daily_at_scheduled_job');
 });
 
 afterEach(function (): void {
@@ -196,7 +209,7 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
@@ -211,7 +224,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что задача провалилась
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 
@@ -222,7 +235,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что теперь 2 проваленные задачи
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect(count($failed))->toBe(2);
 });

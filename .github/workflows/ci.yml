@@ -53,12 +53,12 @@ jobs:
       fail-fast: false
       matrix:
         php-version: [ "8.3" ]
-        wordpress-version: [ "latest", "6.6" ]
+        wordpress-version: [ "latest", "6.7" ]
         include:
           - wordpress-version: latest
             wp-version-string: "latest"
-          - wordpress-version: "6.6"
-            wp-version-string: "6.6"
+          - wordpress-version: "6.7"
+            wp-version-string: "6.7"
 
     services:
       mysql:

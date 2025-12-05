@@ -146,8 +146,8 @@ composer test:unit
 
 E2E тесты запускаются автоматически в GitHub Actions:
 
-- WordPress latest + PHP 8.3
-- WordPress 6.6 + PHP 8.3
+- WordPress latest (6.7+) + PHP 8.3
+- WordPress 6.7 + PHP 8.3
 
 Конфигурация в `.github/workflows/ci.yml`.
 

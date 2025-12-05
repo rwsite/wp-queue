@@ -35,6 +35,16 @@ class Scheduler
      */
     public function job(string $jobClass): ScheduledJob
     {
+        // Проверка существования класса
+        if (! class_exists($jobClass)) {
+            // Логируем ошибку и возвращаем пустой ScheduledJob
+            if (function_exists('error_log')) {
+                error_log("WP Queue: Job class '{$jobClass}' does not exist");
+            }
+
+            return new ScheduledJob($jobClass, $this);
+        }
+
         $scheduled = new ScheduledJob($jobClass, $this);
         $this->jobs[$jobClass] = $scheduled;
 
@@ -155,9 +165,10 @@ class Scheduler
      */
     protected function getHook(string $jobClass): string
     {
-        $name = (new ReflectionClass($jobClass))->getShortName();
+        // Извлекаем короткое имя класса без ReflectionClass
+        $name = substr(strrchr($jobClass, '\\') ?: $jobClass, 1) ?: $jobClass;
 
-        return 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+        return 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
     }
 
     /**

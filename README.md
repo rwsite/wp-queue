@@ -406,8 +406,8 @@ composer test:unit
 
 Интеграционные тесты с реальным WordPress запускаются автоматически в CI:
 
-- ✅ WordPress latest + PHP 8.3
-- ✅ WordPress 6.6 + PHP 8.3
+- ✅ WordPress latest (6.7+) + PHP 8.3
+- ✅ WordPress 6.7 + PHP 8.3
 
 E2E тесты выполняются при каждом push в `main`/`develop` ветки и в pull requests.
 

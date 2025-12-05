@@ -6,29 +6,31 @@ declare(strict_types=1);
  * Bootstrap для E2E тестов с реальным WordPress окружением.
  */
 
-// Путь к корню WordPress
-$wp_root = dirname(__DIR__, 4);
+// Путь к корню WordPress (из переменной окружения или относительный)
+$wp_root = getenv('WP_CORE_DIR') ?: dirname(__DIR__, 4);
 
 // Проверка наличия WordPress
-if (! file_exists($wp_root.'/wp-load.php')) {
-    echo "WordPress не найден в: {$wp_root}\n";
+if (! file_exists($wp_root . '/wp-load.php')) {
+    echo "   INFO  WordPress не найден в: {$wp_root}\n";
+    echo "   HINT  Установите переменную WP_CORE_DIR или запустите тесты в CI\n";
     exit(1);
 }
 
 // Загрузка WordPress
-require_once $wp_root.'/wp-load.php';
+require_once $wp_root . '/wp-load.php';
 
-// Загрузка WordPress тестовой библиотеки
-if (file_exists($wp_root.'/wp-content/plugins/wp-queue/vendor/yoast/phpunit-polyfills/phpunitpolyfills-autoload.php')) {
-    require_once $wp_root.'/wp-content/plugins/wp-queue/vendor/yoast/phpunit-polyfills/phpunitpolyfills-autoload.php';
+// Загрузка WordPress тестовой библиотеки (ищем в vendor плагина)
+$polyfills_path = dirname(__DIR__) . '/vendor/yoast/phpunit-polyfills/phpunitpolyfills-autoload.php';
+if (file_exists($polyfills_path)) {
+    require_once $polyfills_path;
 }
 
 // Загрузка плагина
-require_once dirname(__DIR__).'/wp-queue.php';
+require_once dirname(__DIR__) . '/wp-queue.php';
 
 // Активация плагина
 if (! function_exists('activate_plugin')) {
-    require_once $wp_root.'/wp-admin/includes/plugin.php';
+    require_once $wp_root . '/wp-admin/includes/plugin.php';
 }
 
 // Инициализация плагина

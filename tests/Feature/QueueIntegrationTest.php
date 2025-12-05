@@ -81,7 +81,7 @@ test('задача с delay откладывается на указанное �
 
 test('задача с несколькими попытками при ошибке', function (): void {
     RetryableJob::$globalAttempts = 0;
-    $job = new RetryableJob(5); // Падает 5 раз
+    $job = new RetryableJob(3); // Падает 3 раза
     $job->setMaxAttempts(3);
 
     WPQueue::dispatch($job);

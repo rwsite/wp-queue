@@ -177,7 +177,7 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
@@ -192,7 +192,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что задача провалилась
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 
@@ -203,7 +203,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что теперь 2 проваленные задачи
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect(count($failed))->toBe(2);
 });

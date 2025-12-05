@@ -92,7 +92,7 @@ class LogStorage
      */
     public function forJob(string $jobClass): array
     {
-        return array_filter($this->all(), fn($log) => $log['job_class'] === $jobClass);
+        return array_filter($this->all(), fn ($log) => $log['job_class'] === $jobClass);
     }
 
     /**
@@ -108,7 +108,7 @@ class LogStorage
 
         $rows = $wpdb->get_results(
             $wpdb->prepare("SELECT * FROM {$table} WHERE status = %s ORDER BY created_at DESC", 'failed'),
-            ARRAY_A
+            ARRAY_A,
         ) ?: [];
 
         return array_map(static function (array $row): array {
@@ -138,7 +138,7 @@ class LogStorage
 
         $rows = $wpdb->get_results(
             $wpdb->prepare("SELECT * FROM {$table} WHERE status = %s ORDER BY created_at DESC", 'completed'),
-            ARRAY_A
+            ARRAY_A,
         ) ?: [];
 
         return array_map(static function (array $row): array {
@@ -166,7 +166,7 @@ class LogStorage
         $cutoff = gmdate('Y-m-d H:i:s', time() - ($daysOld * DAY_IN_SECONDS));
 
         $deleted = $wpdb->query(
-            $wpdb->prepare("DELETE FROM {$table} WHERE created_at < %s", $cutoff)
+            $wpdb->prepare("DELETE FROM {$table} WHERE created_at < %s", $cutoff),
         );
 
         return (int) $deleted;
@@ -226,11 +226,12 @@ class LogStorage
 
         return $metrics;
     }
+
     protected function getTableName(): string
     {
         global $wpdb;
 
-        return $wpdb->prefix . 'wp_queue_logs';
+        return $wpdb->prefix.'wp_queue_logs';
     }
 
     protected function isMissingTableError(?string $message): bool

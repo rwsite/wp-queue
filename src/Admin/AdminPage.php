@@ -58,44 +58,44 @@ class AdminPage
 
     protected function getHelpTabAbout(): string
     {
-        return '<h2>' . __('About WP Queue', 'wp-queue') . ' ' . WP_QUEUE_VERSION . '</h2>' .
-            '<p>' . __('WP Queue helps your site run heavy or regular tasks in the background (emails, synchronizations, cleanups) so that pages load faster for visitors.', 'wp-queue') . '</p>' .
-            '<p>' . __('The plugin itself does not add new features to the frontend. It provides a reliable queue that other plugins or your custom code can use for background work.', 'wp-queue') . '</p>' .
-            '<h3>' . __('What you can use it for', 'wp-queue') . '</h3>' .
-            '<ul>' .
-            '<li>' . __('Monitor which background jobs are queued and running right now.', 'wp-queue') . '</li>' .
-            '<li>' . __('Quickly see if any jobs are failing and view recent log entries.', 'wp-queue') . '</li>' .
-            '<li>' . __('Inspect and manage WP-Cron events for WP Queue and other plugins.', 'wp-queue') . '</li>' .
-            '<li>' . __('Check basic system requirements that affect queue stability.', 'wp-queue') . '</li>' .
-            '</ul>' .
-            '<h3>' . __('For developers', 'wp-queue') . '</h3>' .
-            '<p>' . __('Developers can dispatch their own jobs to the queue, choose drivers (Database, Sync, Redis), configure retries and schedules. See the documentation and examples on GitHub for integration details.', 'wp-queue') . '</p>';
+        return '<h2>'.__('About WP Queue', 'wp-queue').' '.WP_QUEUE_VERSION.'</h2>'.
+            '<p>'.__('WP Queue helps your site run heavy or regular tasks in the background (emails, synchronizations, cleanups) so that pages load faster for visitors.', 'wp-queue').'</p>'.
+            '<p>'.__('The plugin itself does not add new features to the frontend. It provides a reliable queue that other plugins or your custom code can use for background work.', 'wp-queue').'</p>'.
+            '<h3>'.__('What you can use it for', 'wp-queue').'</h3>'.
+            '<ul>'.
+            '<li>'.__('Monitor which background jobs are queued and running right now.', 'wp-queue').'</li>'.
+            '<li>'.__('Quickly see if any jobs are failing and view recent log entries.', 'wp-queue').'</li>'.
+            '<li>'.__('Inspect and manage WP-Cron events for WP Queue and other plugins.', 'wp-queue').'</li>'.
+            '<li>'.__('Check basic system requirements that affect queue stability.', 'wp-queue').'</li>'.
+            '</ul>'.
+            '<h3>'.__('For developers', 'wp-queue').'</h3>'.
+            '<p>'.__('Developers can dispatch their own jobs to the queue, choose drivers (Database, Sync, Redis), configure retries and schedules. See the documentation and examples on GitHub for integration details.', 'wp-queue').'</p>';
     }
 
     protected function getHelpTabUsage(): string
     {
-        return '<h2>' . __('Basic Usage', 'wp-queue') . '</h2>' .
-            '<h3>' . __('For site administrators', 'wp-queue') . '</h3>' .
-            '<ul>' .
-            '<li>' . __('Dashboard – quick overview of queues, number of jobs and recent activity.', 'wp-queue') . '</li>' .
-            '<li>' . __('Scheduled Jobs – list of recurring background jobs added by your theme or plugins.', 'wp-queue') . '</li>' .
-            '<li>' . __('Logs – history of completed and failed jobs that helps to diagnose problems.', 'wp-queue') . '</li>' .
-            '<li>' . __('WP-Cron – list of cron events with the ability to run, pause or delete them.', 'wp-queue') . '</li>' .
-            '<li>' . __('System – checks PHP version, WP-Cron status and other important settings.', 'wp-queue') . '</li>' .
-            '</ul>' .
-            '<p>' . __('If you installed WP Queue because another plugin requires it, you usually do not need to configure anything here. Use these tabs mainly for monitoring and troubleshooting.', 'wp-queue') . '</p>' .
-            '<h3>' . __('For developers', 'wp-queue') . '</h3>' .
-            '<p>' . sprintf(
+        return '<h2>'.__('Basic Usage', 'wp-queue').'</h2>'.
+            '<h3>'.__('For site administrators', 'wp-queue').'</h3>'.
+            '<ul>'.
+            '<li>'.__('Dashboard – quick overview of queues, number of jobs and recent activity.', 'wp-queue').'</li>'.
+            '<li>'.__('Scheduled Jobs – list of recurring background jobs added by your theme or plugins.', 'wp-queue').'</li>'.
+            '<li>'.__('Logs – history of completed and failed jobs that helps to diagnose problems.', 'wp-queue').'</li>'.
+            '<li>'.__('WP-Cron – list of cron events with the ability to run, pause or delete them.', 'wp-queue').'</li>'.
+            '<li>'.__('System – checks PHP version, WP-Cron status and other important settings.', 'wp-queue').'</li>'.
+            '</ul>'.
+            '<p>'.__('If you installed WP Queue because another plugin requires it, you usually do not need to configure anything here. Use these tabs mainly for monitoring and troubleshooting.', 'wp-queue').'</p>'.
+            '<h3>'.__('For developers', 'wp-queue').'</h3>'.
+            '<p>'.sprintf(
                 /* translators: %s: URL to GitHub repository */
                 __('To add your own background jobs, use the WP Queue PHP API from your plugin or theme. You can dispatch jobs to different queues, set delays and retries. Full code examples are available in the <a href="%s" target="_blank">README on GitHub</a>.', 'wp-queue'),
                 esc_url('https://github.com/rwsite/wp-queue'),
-            ) . '</p>';
+            ).'</p>';
     }
 
     protected function getHelpTabCli(): string
     {
-        return '<h2>' . __('WP-CLI Commands', 'wp-queue') . '</h2>' .
-            '<p>' . __('Run', 'wp-queue') . ' <code>wp help queue</code> ' . __('to get a list of available commands.', 'wp-queue') . '</p>' .
+        return '<h2>'.__('WP-CLI Commands', 'wp-queue').'</h2>'.
+            '<p>'.__('Run', 'wp-queue').' <code>wp help queue</code> '.__('to get a list of available commands.', 'wp-queue').'</p>'.
             '<pre><code># Queue commands
 wp queue status              # Show queue status
 wp queue work [queue]        # Process jobs from queue
@@ -116,10 +116,10 @@ wp queue system              # Show system status</code></pre>';
 
     protected function getHelpSidebar(): string
     {
-        return '<p><strong>' . __('For more information:', 'wp-queue') . '</strong></p>' .
-            '<p><a href="https://github.com/rwsite/wp-queue" target="_blank">' . __('GitHub Repository', 'wp-queue') . '</a></p>' .
-            '<p><a href="https://github.com/rwsite/wp-queue/issues" target="_blank">' . __('Report Issues', 'wp-queue') . '</a></p>' .
-            '<p><a href="https://rwsite.ru" target="_blank">' . __('Author Website', 'wp-queue') . '</a></p>';
+        return '<p><strong>'.__('For more information:', 'wp-queue').'</strong></p>'.
+            '<p><a href="https://github.com/rwsite/wp-queue" target="_blank">'.__('GitHub Repository', 'wp-queue').'</a></p>'.
+            '<p><a href="https://github.com/rwsite/wp-queue/issues" target="_blank">'.__('Report Issues', 'wp-queue').'</a></p>'.
+            '<p><a href="https://rwsite.ru" target="_blank">'.__('Author Website', 'wp-queue').'</a></p>';
     }
 
     public function enqueueAssets(string $hook): void
@@ -130,14 +130,14 @@ wp queue system              # Show system status</code></pre>';
 
         wp_enqueue_style(
             'wp-queue-admin',
-            WP_QUEUE_URL . 'assets/css/admin.css',
+            WP_QUEUE_URL.'assets/css/admin.css',
             [],
             WP_QUEUE_VERSION,
         );
 
         wp_enqueue_script(
             'wp-queue-admin',
-            WP_QUEUE_URL . 'assets/js/admin.js',
+            WP_QUEUE_URL.'assets/js/admin.js',
             ['jquery'],
             WP_QUEUE_VERSION,
             true,
@@ -181,7 +181,7 @@ wp queue system              # Show system status</code></pre>';
     {
         $tab = sanitize_key($_GET['tab'] ?? 'dashboard');
 
-?>
+        ?>
         <div class="wrap wp-queue-admin">
             <h1><?php echo esc_html__('WP Queue Dashboard', 'wp-queue'); ?></h1>
 
@@ -208,15 +208,15 @@ wp queue system              # Show system status</code></pre>';
 
             <div class="wp-queue-content">
                 <?php
-                match ($tab) {
-                    'jobs' => $this->renderJobsTab(),
-                    'logs' => $this->renderLogsTab(),
-                    'cron' => $this->renderCronTab(),
-                    'system' => $this->renderSystemTab(),
-                    'help' => $this->renderHelpTab(),
-                    default => $this->renderDashboardTab(),
-                };
-                ?>
+                        match ($tab) {
+                            'jobs' => $this->renderJobsTab(),
+                            'logs' => $this->renderLogsTab(),
+                            'cron' => $this->renderCronTab(),
+                            'system' => $this->renderSystemTab(),
+                            'help' => $this->renderHelpTab(),
+                            default => $this->renderDashboardTab(),
+                        };
+        ?>
             </div>
         </div>
     <?php
@@ -227,12 +227,12 @@ wp queue system              # Show system status</code></pre>';
         $metrics = WPQueue::logs()->metrics();
         $queues = $this->getQueuesStatus();
 
-    ?>
+        ?>
         <div class="wp-queue-dashboard">
             <p class="description">
                 <?php echo esc_html__(
                     'Показывает общую статистику по очередям (ожидающие, выполняющиеся, завершенные и провалившиеся задачи), таблицу всех очередей с их статусом и кнопками управления (пауза/возобновление, очистка), а также последние 10 записей логов активности.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <div class="wp-queue-stats">
@@ -304,12 +304,12 @@ wp queue system              # Show system status</code></pre>';
         $scheduler = WPQueue::scheduler();
         $jobs = $scheduler->getJobs();
 
-    ?>
+        ?>
         <div class="wp-queue-jobs">
             <p class="description">
                 <?php echo esc_html__(
                     'Отображает таблицу запланированных повторяющихся задач (PHP-классов), зарегистрированных в WP Queue: класс задачи, интервал выполнения, очередь назначения и время следующего запуска. Позволяет запускать любую задачу вручную.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <table class="wp-list-table widefat fixed striped">
@@ -330,7 +330,7 @@ wp queue system              # Show system status</code></pre>';
                     <?php } else { ?>
                         <?php foreach ($jobs as $jobClass => $scheduled) { ?>
                             <?php
-                            $hook = 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', (new \ReflectionClass($jobClass))->getShortName()));
+                            $hook = 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', (new \ReflectionClass($jobClass))->getShortName()));
                             $nextRun = wp_next_scheduled($hook);
                             ?>
                             <tr>
@@ -361,13 +361,13 @@ wp queue system              # Show system status</code></pre>';
 
     protected function renderHelpTab(): void
     {
-    ?>
+        ?>
         <div class="wp-queue-help">
             <h2><?php echo esc_html__('About WP Queue', 'wp-queue'); ?></h2>
             <p class="description">
                 <?php echo esc_html__(
                     'WP Queue is a robust background processing library for WordPress. It allows you to offload time-consuming tasks (like sending emails, syncing data, or generating reports) to be processed asynchronously, ensuring your site remains fast and responsive for visitors.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
 
@@ -377,13 +377,13 @@ wp queue system              # Show system status</code></pre>';
             <p>
                 <?php echo esc_html__(
                     'By default, WordPress executes all actions during the page load request. If a plugin needs to send 100 emails or sync 500 products with an external API, the user has to wait until it finishes. This leads to slow page loads or timeouts.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <p>
                 <?php echo esc_html__(
                     'WP Queue solves this by pushing these tasks to a "Queue" and processing them later in the background. The user gets an instant response, and the heavy work happens behind the scenes.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
 
@@ -399,7 +399,7 @@ wp queue system              # Show system status</code></pre>';
             <p>
                 <?php echo esc_html__(
                     'To process the queue, WordPress needs a trigger. There are two ways to do this:',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <div style="background: #fff; border: 1px solid #ccd0d4; padding: 15px; margin-bottom: 15px;">
@@ -407,7 +407,7 @@ wp queue system              # Show system status</code></pre>';
                 <p style="margin-top: 5px;">
                     <?php echo esc_html__(
                         'WordPress checks for scheduled tasks on every page load. This works out of the box but has downsides: on low-traffic sites, tasks might not run on time; on high-traffic sites, it can cause performance issues. It is "fake" cron.',
-                        'wp-queue'
+                        'wp-queue',
                     ); ?>
                 </p>
 
@@ -415,7 +415,7 @@ wp queue system              # Show system status</code></pre>';
                 <p style="margin-top: 5px;">
                     <?php echo esc_html__(
                         'A real cron job configured on your server (Linux) that calls WordPress every minute. This is reliable and precise. Ideally, you should disable default WP-Cron and use System Cron.',
-                        'wp-queue'
+                        'wp-queue',
                     ); ?>
                 </p>
                 <code style="display: block; background: #f0f0f1; padding: 10px; margin-top: 5px;">*/1 * * * * php /path/to/wordpress/wp-cron.php</code>
@@ -425,7 +425,7 @@ wp queue system              # Show system status</code></pre>';
             <p>
                 <?php echo esc_html__(
                     'By default, WP Queue stores jobs in the WordPress database (wp_options or custom tables). For high-performance sites, you can use Redis. Redis is an in-memory data store that is much faster than a SQL database for queue operations. It reduces load on your database and speeds up job processing.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
 
@@ -522,11 +522,11 @@ wp queue system              # Show system status</code></pre>';
                     /* translators: %s: URL to GitHub repository */
                     esc_html__(
                         'Full documentation and code examples are available on GitHub: %s.',
-                        'wp-queue'
+                        'wp-queue',
                     ),
-                    esc_url('https://github.com/rwsite/wp-queue')
+                    esc_url('https://github.com/rwsite/wp-queue'),
                 );
-                ?>
+        ?>
             </p>
         </div>
     <?php
@@ -541,12 +541,12 @@ wp queue system              # Show system status</code></pre>';
             default => WPQueue::logs()->recent(200),
         };
 
-    ?>
+        ?>
         <div class="wp-queue-logs">
             <p class="description">
                 <?php echo esc_html__(
                     'Показывает историю выполнения задач в виде таблицы: время запуска, статус (завершено/провалено), класс задачи, очередь и сообщение об ошибке. Фильтры по статусу (все, только завершенные, только провалившиеся). Кнопка для очистки старых логов.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <div class="tablenav top">
@@ -608,7 +608,7 @@ wp queue system              # Show system status</code></pre>';
     {
         $logs = WPQueue::logs()->recent($limit);
 
-    ?>
+        ?>
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -628,13 +628,13 @@ wp queue system              # Show system status</code></pre>';
                             <td><?php echo esc_html(wp_date('H:i:s', $log['timestamp'])); ?></td>
                             <td>
                                 <?php
-                                $icon = match ($log['status']) {
-                                    'completed' => '✓',
-                                    'failed' => '✗',
-                                    'retrying' => '↻',
-                                    default => '⟳',
-                                };
-                                ?>
+                                    $icon = match ($log['status']) {
+                                        'completed' => '✓',
+                                        'failed' => '✗',
+                                        'retrying' => '↻',
+                                        default => '⟳',
+                                    };
+                        ?>
                                 <span class="log-icon log-<?php echo esc_attr($log['status']); ?>"><?php echo esc_html($icon); ?></span>
                                 <?php echo esc_html($log['status']); ?>
                             </td>
@@ -711,21 +711,21 @@ wp queue system              # Show system status</code></pre>';
         $filter = sanitize_key($_GET['filter'] ?? 'all');
 
         $events = match ($filter) {
-            'wordpress' => array_filter($monitor->getAllEvents(), fn($e) => $e['source'] === 'wordpress'),
-            'woocommerce' => array_filter($monitor->getAllEvents(), fn($e) => $e['source'] === 'woocommerce'),
-            'wp-queue' => array_filter($monitor->getAllEvents(), fn($e) => $e['source'] === 'wp-queue'),
-            'plugin' => array_filter($monitor->getAllEvents(), fn($e) => $e['source'] === 'plugin'),
+            'wordpress' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'wordpress'),
+            'woocommerce' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'woocommerce'),
+            'wp-queue' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'wp-queue'),
+            'plugin' => array_filter($monitor->getAllEvents(), fn ($e) => $e['source'] === 'plugin'),
             default => $monitor->getAllEvents(),
         };
 
         $stats = $monitor->getStats();
 
-    ?>
+        ?>
         <div class="wp-queue-cron">
             <p class="description">
                 <?php echo esc_html__(
                     'Отображает все зарегистрированные WP-Cron события (таймеры): хук, следующее время выполнения, расписание, источник. Действия для каждого: запуск, редактирование расписания, пауза, удаление. Отдельные таблицы для приостановленных событий и зарегистрированных расписаний.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <div class="wp-queue-stats">
@@ -927,12 +927,12 @@ wp queue system              # Show system status</code></pre>';
         $report = $status->getFullReport();
         $health = $status->getHealthStatus();
 
-    ?>
+        ?>
         <div class="wp-queue-system">
             <p class="description">
                 <?php echo esc_html__(
                     'Показывает информацию об окружении (версии PHP и WordPress, лимиты памяти, время выполнения, таймзона), статус WP-Cron (отключен ли, альтернативный крон, loopback проверки). Если установлен Action Scheduler — его статистику. Время сервера и WordPress.',
-                    'wp-queue'
+                    'wp-queue',
                 ); ?>
             </p>
             <?php if ($health['status'] !== 'healthy') { ?>
@@ -1013,15 +1013,15 @@ wp queue system              # Show system status</code></pre>';
                             <span class="status-badge status-<?php echo $report['loopback']['status'] === 'ok' ? 'completed' : ($report['loopback']['status'] === 'warning' ? 'pending' : 'failed'); ?>">
                                 <?php
                                 $status_text = $report['loopback']['status'];
-                                if ($status_text === 'ok') {
-                                    $status_text = __('OK', 'wp-queue');
-                                } elseif ($status_text === 'warning') {
-                                    $status_text = __('Warning', 'wp-queue');
-                                } else {
-                                    $status_text = __('Error', 'wp-queue');
-                                }
-                                echo esc_html($status_text);
-                                ?>
+        if ($status_text === 'ok') {
+            $status_text = __('OK', 'wp-queue');
+        } elseif ($status_text === 'warning') {
+            $status_text = __('Warning', 'wp-queue');
+        } else {
+            $status_text = __('Error', 'wp-queue');
+        }
+        echo esc_html($status_text);
+        ?>
                             </span>
                             <?php if ($report['loopback']['status'] !== 'ok') { ?>
                                 <p class="description"><?php echo esc_html($report['loopback']['message']); ?></p>

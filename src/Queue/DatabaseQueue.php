@@ -72,21 +72,21 @@ class DatabaseQueue implements QueueInterface
             if (isset($jobs[$jobId])) {
                 unset($jobs[$jobId]);
                 $this->saveQueue($queue, $jobs);
-                
+
                 error_log(sprintf(
                     'WP Queue: Deleted job %s from queue %s. Remaining: %d',
                     $jobId,
                     $queue,
-                    count($jobs)
+                    count($jobs),
                 ));
 
                 return true;
             }
         }
-        
+
         error_log(sprintf(
             'WP Queue: Failed to delete job %s - not found in any queue',
-            $jobId
+            $jobId,
         ));
 
         return false;

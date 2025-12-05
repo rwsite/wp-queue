@@ -32,12 +32,12 @@ define('WP_QUEUE_PATH', plugin_dir_path(__FILE__));
 define('WP_QUEUE_URL', plugin_dir_url(__FILE__));
 
 // Autoload: Composer (dev) or custom PSR-4 (production)
-if (file_exists(WP_QUEUE_PATH . 'vendor/autoload.php')) {
-    require_once WP_QUEUE_PATH . 'vendor/autoload.php';
+if (file_exists(WP_QUEUE_PATH.'vendor/autoload.php')) {
+    require_once WP_QUEUE_PATH.'vendor/autoload.php';
 } else {
     spl_autoload_register(static function (string $class): void {
         $prefix = 'WPQueue\\';
-        $baseDir = WP_QUEUE_PATH . 'src/';
+        $baseDir = WP_QUEUE_PATH.'src/';
 
         $len = strlen($prefix);
         if (strncmp($prefix, $class, $len) !== 0) {
@@ -45,7 +45,7 @@ if (file_exists(WP_QUEUE_PATH . 'vendor/autoload.php')) {
         }
 
         $relativeClass = substr($class, $len);
-        $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+        $file = $baseDir.str_replace('\\', '/', $relativeClass).'.php';
 
         if (file_exists($file)) {
             require_once $file;

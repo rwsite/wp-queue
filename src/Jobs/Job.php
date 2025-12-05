@@ -142,13 +142,13 @@ abstract class Job implements JobInterface, ShouldQueue
                 $name = $property->getName();
 
                 // Skip uninitialized typed properties
-                if ($property->hasType() && !$property->isInitialized($this)) {
+                if ($property->hasType() && ! $property->isInitialized($this)) {
                     continue;
                 }
 
                 // Use class name prefix for private properties to avoid conflicts
                 if ($property->isPrivate() && $property->getDeclaringClass()->getName() !== self::class) {
-                    $key = $property->getDeclaringClass()->getName() . '::' . $name;
+                    $key = $property->getDeclaringClass()->getName().'::'.$name;
                 } else {
                     $key = $name;
                 }
@@ -173,7 +173,7 @@ abstract class Job implements JobInterface, ShouldQueue
             foreach ($ref->getProperties() as $property) {
                 $name = $property->getName();
                 if ($property->isPrivate() && $property->getDeclaringClass()->getName() !== self::class) {
-                    $key = $property->getDeclaringClass()->getName() . '::' . $name;
+                    $key = $property->getDeclaringClass()->getName().'::'.$name;
                 } else {
                     $key = $name;
                 }
@@ -191,9 +191,9 @@ abstract class Job implements JobInterface, ShouldQueue
 
         // Initialize any remaining uninitialized typed properties with defaults
         foreach ($properties as $key => $property) {
-            if ($property->hasType() && !$property->isInitialized($this)) {
+            if ($property->hasType() && ! $property->isInitialized($this)) {
                 $type = $property->getType();
-                if ($type instanceof \ReflectionNamedType && !$type->allowsNull()) {
+                if ($type instanceof \ReflectionNamedType && ! $type->allowsNull()) {
                     $default = match ($type->getName()) {
                         'array' => [],
                         'string' => '',

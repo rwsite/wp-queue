@@ -291,7 +291,6 @@ wp_queue_job_{queue}_{batch_id}    - Данные очереди (сериали
 wp_queue_status_{queue}            - Статус очереди (paused/cancelled/running)
 wp_queue_lock_{queue}              - Lock transient
 wp_queue_metrics                   - Метрики (JSON)
-wp_queue_logs                      - Последние N логов (JSON)
 ```
 
 ### Job сериализация

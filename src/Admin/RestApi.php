@@ -211,12 +211,22 @@ class RestApi
 
         $result = [];
         foreach ($jobs as $index => $job) {
-            $result[] = [
-                'id' => $index,
-                'class' => get_class($job),
-                'attempts' => $job->attempts ?? 0,
-                'available_at' => $job->availableAt ?? time(),
-            ];
+            // Поддержка как объектов, так и массивов
+            if (is_object($job)) {
+                $result[] = [
+                    'id' => $index,
+                    'class' => get_class($job),
+                    'attempts' => $job->attempts ?? 0,
+                    'available_at' => $job->availableAt ?? time(),
+                ];
+            } else {
+                $result[] = [
+                    'id' => $index,
+                    'class' => $job['class'] ?? 'Unknown',
+                    'attempts' => $job['attempts'] ?? 0,
+                    'available_at' => $job['available_at'] ?? time(),
+                ];
+            }
         }
 
         return new WP_REST_Response($result);

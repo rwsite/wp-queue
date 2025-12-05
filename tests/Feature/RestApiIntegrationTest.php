@@ -248,6 +248,9 @@ test('REST API проверяет права доступа для админи�
 });
 
 test('REST API возвращает 404 для несуществующей очереди', function (): void {
+    // Авторизуемся как администратор для доступа к API
+    wp_set_current_user(1);
+
     $request = new \WP_REST_Request('GET', '/wp-queue/v1/queues/nonexistent');
     $response = rest_do_request($request);
 

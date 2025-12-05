@@ -9,17 +9,22 @@ use WPQueue\Tests\Fixtures\SimpleTestJob;
 use WPQueue\WPQueue;
 
 beforeEach(function (): void {
-    // Очистка очередей (но не счётчиков)
-    WPQueue::clear('default');
-    WPQueue::clear('emails');
+    // Очистка кэша опций
+    wp_cache_flush();
+
+    // Очистка очередей напрямую через БД
+    global $wpdb;
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name IN ('wp_queue_jobs_default', 'wp_queue_jobs_emails')");
 
     // Очистка счётчиков и статусов
-    global $wpdb;
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%' AND option_name NOT LIKE 'wp_queue_jobs_%'");
 
     // Явная очистка статуса паузы
     delete_site_option('wp_queue_status_default');
     delete_site_option('wp_queue_status_emails');
+
+    // Повторная очистка кэша
+    wp_cache_flush();
 
     // Мок для REST API
     global $wp_rest_server;

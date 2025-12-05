@@ -15,17 +15,22 @@ beforeEach(function (): void {
         define('WP_CLI', true);
     }
 
-    // Очистка очередей (но не счётчиков)
-    WPQueue::clear('default');
-    WPQueue::clear('emails');
+    // Очистка кэша опций
+    wp_cache_flush();
+
+    // Очистка очередей напрямую через БД
+    global $wpdb;
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name IN ('wp_queue_jobs_default', 'wp_queue_jobs_emails')");
 
     // Очистка счётчиков и статусов
-    global $wpdb;
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%' AND option_name NOT LIKE 'wp_queue_jobs_%'");
 
     // Явная очистка статуса паузы
     delete_site_option('wp_queue_status_default');
     delete_site_option('wp_queue_status_emails');
+
+    // Повторная очистка кэша
+    wp_cache_flush();
 });
 
 afterEach(function (): void {
@@ -187,7 +192,7 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
@@ -202,7 +207,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что задача провалилась
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 
@@ -213,7 +218,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что теперь 2 проваленные задачи
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect(count($failed))->toBe(2);
 });

@@ -68,6 +68,18 @@ class RestApi
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        register_rest_route($namespace, '/jobs/(?P<job>[^/]+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getJob'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        register_rest_route($namespace, '/jobs/(?P<job>[^/]+)/delete', [
+            'methods' => 'POST',
+            'callback' => [$this, 'deleteJob'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         register_rest_route($namespace, '/stats', [
             'methods' => 'GET',
             'callback' => [$this, 'getStats'],
@@ -83,6 +95,12 @@ class RestApi
         register_rest_route($namespace, '/logs/clear', [
             'methods' => 'POST',
             'callback' => [$this, 'clearLogs'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        register_rest_route($namespace, '/queues/clear-all', [
+            'methods' => 'POST',
+            'callback' => [$this, 'clearAllQueues'],
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
@@ -325,6 +343,68 @@ class RestApi
         }
     }
 
+    public function getJob(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        $jobId = urldecode($request->get_param('job'));
+        $queueName = $request->get_param('queue') ?? 'default';
+
+        $jobs = get_site_option('wp_queue_jobs_'.$queueName, []);
+
+        if (! isset($jobs[$jobId])) {
+            return new WP_Error('job_not_found', 'Job not found', ['status' => 404]);
+        }
+
+        $data = $jobs[$jobId];
+        $result = [
+            'id' => $jobId,
+            'queue' => $queueName,
+            'attempts' => $data['attempts'] ?? 0,
+            'available_at' => $data['available_at'] ?? 0,
+            'reserved_at' => $data['reserved_at'] ?? null,
+            'class' => 'Unknown',
+            'payload' => null,
+        ];
+
+        // Попробуем десериализовать payload
+        if (isset($data['payload'])) {
+            try {
+                $job = @unserialize($data['payload']);
+                if (is_object($job)) {
+                    $result['class'] = get_class($job);
+                    if (method_exists($job, 'toArray')) {
+                        $result['payload'] = $job->toArray();
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Игнорируем ошибки десериализации
+            }
+        }
+
+        return new WP_REST_Response($result);
+    }
+
+    public function deleteJob(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        $jobId = urldecode($request->get_param('job'));
+        $queueName = $request->get_param('queue') ?? 'default';
+
+        $jobs = get_site_option('wp_queue_jobs_'.$queueName, []);
+
+        if (! isset($jobs[$jobId])) {
+            return new WP_Error('job_not_found', 'Job not found', ['status' => 404]);
+        }
+
+        unset($jobs[$jobId]);
+
+        if (empty($jobs)) {
+            delete_site_option('wp_queue_jobs_'.$queueName);
+        } else {
+            update_site_option('wp_queue_jobs_'.$queueName, $jobs);
+        }
+
+        return new WP_REST_Response(['success' => true, 'message' => 'Job deleted']);
+    }
+
     public function getLogs(WP_REST_Request $request): WP_REST_Response
     {
         $filter = $request->get_param('filter') ?? $request->get_param('status') ?? 'all';
@@ -341,8 +421,33 @@ class RestApi
 
     public function clearLogs(WP_REST_Request $request): WP_REST_Response
     {
-        $days = (int) ($request->get_param('days') ?? 7);
-        $cleared = WPQueue::logs()->clearOld($days);
+        $all = $request->get_param('all');
+
+        if ($all) {
+            $cleared = WPQueue::logs()->clear();
+        } else {
+            $days = (int) ($request->get_param('days') ?? 7);
+            $cleared = WPQueue::logs()->clearOld($days);
+        }
+
+        return new WP_REST_Response(['success' => true, 'cleared' => $cleared]);
+    }
+
+    public function clearAllQueues(): WP_REST_Response
+    {
+        global $wpdb;
+
+        // Находим все опции с джобами
+        $results = $wpdb->get_col(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_jobs_%'",
+        );
+
+        $cleared = 0;
+        foreach ($results as $optionName) {
+            $queueName = str_replace('wp_queue_jobs_', '', $optionName);
+            WPQueue::clear($queueName);
+            $cleared++;
+        }
 
         return new WP_REST_Response(['success' => true, 'cleared' => $cleared]);
     }

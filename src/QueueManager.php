@@ -36,6 +36,17 @@ use WPQueue\Queue\SyncQueue;
 class QueueManager
 {
     /**
+     * Driver status constants.
+     */
+    public const STATUS_READY = 'ready';
+
+    public const STATUS_NO_EXTENSION = 'no_extension';
+
+    public const STATUS_NO_SERVER = 'no_server';
+
+    public const STATUS_UNAVAILABLE = 'unavailable';
+
+    /**
      * @var array<string, QueueInterface>
      */
     protected array $connections = [];
@@ -46,6 +57,13 @@ class QueueManager
     protected array $customCreators = [];
 
     protected ?string $defaultDriver = null;
+
+    /**
+     * Cached driver status info.
+     *
+     * @var array<string, array{status: string, extension: bool, server: bool, message: string}>|null
+     */
+    protected ?array $driverStatusCache = null;
 
     public function connection(?string $name = null): QueueInterface
     {
@@ -59,13 +77,21 @@ class QueueManager
      *
      * Priority:
      * 1. Explicitly set driver via setDefaultDriver()
-     * 2. WP_QUEUE_DRIVER constant
+     * 2. WP_QUEUE_DRIVER constant (with availability check)
      * 3. 'database' as fallback
+     *
+     * IMPORTANT: If configured driver is not available, falls back to 'database'
+     * to prevent fatal errors.
      */
     public function getDefaultDriver(): string
     {
         if ($this->defaultDriver !== null) {
-            return $this->defaultDriver;
+            // Even explicitly set driver must be available
+            if ($this->isDriverReady($this->defaultDriver)) {
+                return $this->defaultDriver;
+            }
+
+            return 'database';
         }
 
         // Check WP_QUEUE_DRIVER constant
@@ -76,7 +102,40 @@ class QueueManager
                 return $this->detectBestDriver();
             }
 
-            return $driver;
+            // Validate that configured driver is actually ready
+            if ($this->isDriverReady($driver)) {
+                return $driver;
+            }
+
+            // Log warning about fallback (only once per request)
+            static $warned = [];
+            if (! isset($warned[$driver]) && function_exists('error_log')) {
+                error_log(sprintf(
+                    '[WP Queue] Driver "%s" is configured but not available. Falling back to "database". Run: wp queue drivers',
+                    $driver,
+                ));
+                $warned[$driver] = true;
+            }
+
+            return 'database';
+        }
+
+        return 'database';
+    }
+
+    /**
+     * Get the configured driver name (without fallback).
+     *
+     * Use this to show what user configured, even if it's not available.
+     */
+    public function getConfiguredDriver(): string
+    {
+        if ($this->defaultDriver !== null) {
+            return $this->defaultDriver;
+        }
+
+        if (defined('WP_QUEUE_DRIVER')) {
+            return WP_QUEUE_DRIVER;
         }
 
         return 'database';
@@ -94,11 +153,11 @@ class QueueManager
      */
     public function detectBestDriver(): string
     {
-        if (RedisQueue::isAvailable()) {
+        if ($this->isDriverReady('redis')) {
             return 'redis';
         }
 
-        if (MemcachedQueue::isAvailable()) {
+        if ($this->isDriverReady('memcached')) {
             return 'memcached';
         }
 
@@ -106,40 +165,192 @@ class QueueManager
     }
 
     /**
-     * Get all available drivers.
+     * Check if a driver is fully ready to use.
      *
-     * @return array<string, array{available: bool, info: string}>
+     * This checks both extension availability AND server connectivity.
+     */
+    public function isDriverReady(string $driver): bool
+    {
+        $status = $this->getDriverStatus($driver);
+
+        return $status['status'] === self::STATUS_READY;
+    }
+
+    /**
+     * Get detailed driver status.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    public function getDriverStatus(string $driver): array
+    {
+        // Return cached status if available
+        if (isset($this->driverStatusCache[$driver])) {
+            return $this->driverStatusCache[$driver];
+        }
+
+        $status = match ($driver) {
+            'database', 'sync' => [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => $driver === 'database'
+                    ? __('Uses wp_options table', 'wp-queue')
+                    : __('Synchronous execution (no queue)', 'wp-queue'),
+            ],
+            'redis' => $this->getRedisStatus(),
+            'memcached' => $this->getMemcachedStatus(),
+            default => isset($this->customCreators[$driver])
+                ? [
+                    'status' => self::STATUS_READY,
+                    'extension' => true,
+                    'server' => true,
+                    'message' => __('Custom driver', 'wp-queue'),
+                ]
+                : [
+                    'status' => self::STATUS_UNAVAILABLE,
+                    'extension' => false,
+                    'server' => false,
+                    'message' => __('Unknown driver', 'wp-queue'),
+                ],
+        };
+
+        $this->driverStatusCache[$driver] = $status;
+
+        return $status;
+    }
+
+    /**
+     * Get Redis driver status with detailed checks.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    protected function getRedisStatus(): array
+    {
+        // Step 1: Check PHP extension
+        if (! extension_loaded('redis')) {
+            return [
+                'status' => self::STATUS_NO_EXTENSION,
+                'extension' => false,
+                'server' => false,
+                'message' => __('PHP extension "redis" (phpredis) is not installed', 'wp-queue'),
+            ];
+        }
+
+        // Step 2: Check server connectivity
+        try {
+            $queue = new RedisQueue();
+            // Use reflection to call protected connection() method for testing
+            $reflection = new \ReflectionMethod($queue, 'connection');
+            $reflection->setAccessible(true);
+            $redis = $reflection->invoke($queue);
+            $redis->ping();
+
+            $host = defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1';
+            $port = defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379;
+
+            return [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => sprintf(__('Connected to Redis at %s:%d', 'wp-queue'), $host, $port),
+            ];
+        } catch (\Throwable $e) {
+            $host = defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1';
+            $port = defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379;
+
+            return [
+                'status' => self::STATUS_NO_SERVER,
+                'extension' => true,
+                'server' => false,
+                'message' => sprintf(
+                    __('Cannot connect to Redis at %s:%d - %s', 'wp-queue'),
+                    $host,
+                    $port,
+                    $e->getMessage(),
+                ),
+            ];
+        }
+    }
+
+    /**
+     * Get Memcached driver status with detailed checks.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    protected function getMemcachedStatus(): array
+    {
+        // Step 1: Check PHP extension
+        if (! extension_loaded('memcached')) {
+            return [
+                'status' => self::STATUS_NO_EXTENSION,
+                'extension' => false,
+                'server' => false,
+                'message' => __('PHP extension "memcached" is not installed', 'wp-queue'),
+            ];
+        }
+
+        // Step 2: Check server connectivity
+        try {
+            $queue = new MemcachedQueue();
+            // Use reflection to call protected connection() method for testing
+            $reflection = new \ReflectionMethod($queue, 'connection');
+            $reflection->setAccessible(true);
+            $reflection->invoke($queue);
+
+            $host = defined('WP_MEMCACHED_HOST') ? WP_MEMCACHED_HOST : '127.0.0.1';
+            $port = defined('WP_MEMCACHED_PORT') ? WP_MEMCACHED_PORT : 11211;
+
+            return [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => sprintf(__('Connected to Memcached at %s:%d', 'wp-queue'), $host, $port),
+            ];
+        } catch (\Throwable $e) {
+            $host = defined('WP_MEMCACHED_HOST') ? WP_MEMCACHED_HOST : '127.0.0.1';
+            $port = defined('WP_MEMCACHED_PORT') ? WP_MEMCACHED_PORT : 11211;
+
+            return [
+                'status' => self::STATUS_NO_SERVER,
+                'extension' => true,
+                'server' => false,
+                'message' => sprintf(
+                    __('Cannot connect to Memcached at %s:%d - %s', 'wp-queue'),
+                    $host,
+                    $port,
+                    $e->getMessage(),
+                ),
+            ];
+        }
+    }
+
+    /**
+     * Get all available drivers with detailed status.
+     *
+     * @return array<string, array{status: string, extension: bool, server: bool, message: string, available: bool}>
      */
     public function getAvailableDrivers(): array
     {
-        $drivers = [
-            'database' => [
-                'available' => true,
-                'info' => 'Uses wp_options table',
-            ],
-            'sync' => [
-                'available' => true,
-                'info' => 'Synchronous execution (no queue)',
-            ],
-            'redis' => [
-                'available' => RedisQueue::isAvailable(),
-                'info' => extension_loaded('redis')
-                    ? 'Redis server at '.(defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1').':'.(defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379)
-                    : 'phpredis extension not installed',
-            ],
-            'memcached' => [
-                'available' => MemcachedQueue::isAvailable(),
-                'info' => extension_loaded('memcached')
-                    ? 'Memcached server at '.(defined('WP_MEMCACHED_HOST') ? WP_MEMCACHED_HOST : '127.0.0.1').':'.(defined('WP_MEMCACHED_PORT') ? WP_MEMCACHED_PORT : 11211)
-                    : 'memcached extension not installed',
-            ],
-        ];
+        $drivers = [];
+
+        foreach (['database', 'sync', 'redis', 'memcached'] as $driver) {
+            $status = $this->getDriverStatus($driver);
+            $drivers[$driver] = array_merge($status, [
+                'available' => $status['status'] === self::STATUS_READY,
+                // Legacy compatibility
+                'info' => $status['message'],
+            ]);
+        }
 
         // Add custom drivers
         foreach (array_keys($this->customCreators) as $name) {
             $drivers[$name] = [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => __('Custom driver', 'wp-queue'),
                 'available' => true,
-                'info' => 'Custom driver',
+                'info' => __('Custom driver', 'wp-queue'),
             ];
         }
 
@@ -147,16 +358,13 @@ class QueueManager
     }
 
     /**
-     * Check if a driver is available.
+     * Check if a driver is available (legacy method).
+     *
+     * @deprecated Use isDriverReady() for accurate status
      */
     public function isDriverAvailable(string $driver): bool
     {
-        return match ($driver) {
-            'database', 'sync' => true,
-            'redis' => RedisQueue::isAvailable(),
-            'memcached' => MemcachedQueue::isAvailable(),
-            default => isset($this->customCreators[$driver]),
-        };
+        return $this->isDriverReady($driver);
     }
 
     /**

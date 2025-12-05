@@ -201,7 +201,7 @@ class Scheduler
         // Извлекаем короткое имя класса без ReflectionClass
         $name = substr(strrchr($jobClass, '\\') ?: $jobClass, 1) ?: $jobClass;
 
-        return 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+        return 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
     }
 
     /**

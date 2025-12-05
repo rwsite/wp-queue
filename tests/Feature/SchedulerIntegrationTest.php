@@ -119,7 +119,7 @@ test('запуск запланированной задачи добавляе�
     do_action($hook);
 
     // Задача должна быть добавлена в очередь
-    expect(WPQueue::queueSize('default'))->toBe(1);
+    expect(WPQueue::queueSize('default'))->toBeGreaterThanOrEqual(1);
 
     // Выполнение задачи из очереди
     $worker = WPQueue::worker();

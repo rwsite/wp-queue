@@ -28,6 +28,9 @@ if (file_exists($polyfills_path)) {
 // Загрузка плагина
 require_once dirname(__DIR__).'/wp-queue.php';
 
+// Загрузка тестовых классов
+require_once __DIR__.'/Fixtures/TestJobs.php';
+
 // Активация плагина
 if (! function_exists('activate_plugin')) {
     require_once $wp_root.'/wp-admin/includes/plugin.php';

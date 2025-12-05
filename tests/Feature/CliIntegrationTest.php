@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
-use WPQueue\Jobs\Job;
+use WPQueue\Tests\Fixtures\AlwaysFailingJob;
+use WPQueue\Tests\Fixtures\CounterJob;
+use WPQueue\Tests\Fixtures\EmailQueueJob;
+use WPQueue\Tests\Fixtures\HourlyScheduledJob;
+use WPQueue\Tests\Fixtures\SimpleTestJob;
+use WPQueue\Tests\Fixtures\SlowJob;
 use WPQueue\WPQueue;
 
 beforeEach(function (): void {
@@ -21,20 +26,9 @@ afterEach(function (): void {
 });
 
 test('CLI команда queue:work обрабатывает задачи из очереди', function (): void {
-    $executed = false;
+    delete_option('wp_queue_test_counter');
 
-    $job = new class($executed) extends Job
-    {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
-        public function handle(): void
-        {
-            $this->executed = true;
-        }
-    };
+    $job = new CounterJob('wp_queue_test_counter');
 
     WPQueue::dispatch($job);
     expect(WPQueue::queueSize('default'))->toBe(1);
@@ -44,40 +38,16 @@ test('CLI команда queue:work обрабатывает задачи из �
     $worker->setMaxJobs(1);
     $worker->runNextJob('default');
 
-    expect($executed)->toBeTrue();
+    expect((int) get_option('wp_queue_test_counter', 0))->toBe(1);
     expect(WPQueue::queueSize('default'))->toBe(0);
 });
 
 test('CLI команда queue:work с параметром --queue обрабатывает указанную очередь', function (): void {
-    $defaultExecuted = false;
-    $emailsExecuted = false;
+    delete_option('wp_queue_default_counter');
+    delete_option('wp_queue_emails_counter');
 
-    $defaultJob = new class($defaultExecuted) extends Job
-    {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
-        public function handle(): void
-        {
-            $this->executed = true;
-        }
-    };
-
-    $emailsJob = new class($emailsExecuted) extends Job
-    {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-            $this->queue = 'emails';
-        }
-
-        public function handle(): void
-        {
-            $this->executed = true;
-        }
-    };
+    $defaultJob = new CounterJob('wp_queue_default_counter');
+    $emailsJob = new EmailQueueJob('wp_queue_emails_counter');
 
     WPQueue::dispatch($defaultJob);
     WPQueue::dispatch($emailsJob);
@@ -87,22 +57,15 @@ test('CLI команда queue:work с параметром --queue обраба
     $worker->setMaxJobs(1);
     $worker->runNextJob('emails');
 
-    expect($defaultExecuted)->toBeFalse();
-    expect($emailsExecuted)->toBeTrue();
+    expect((int) get_option('wp_queue_default_counter', 0))->toBe(0);
+    expect((int) get_option('wp_queue_emails_counter', 0))->toBe(1);
 });
 
 test('CLI команда queue:work с параметром --max-jobs ограничивает количество задач', function (): void {
     delete_option('wp_queue_cli_maxjobs_count');
 
     for ($i = 0; $i < 10; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void
-            {
-                $count = (int) get_option('wp_queue_cli_maxjobs_count', 0);
-                update_option('wp_queue_cli_maxjobs_count', $count + 1);
-            }
-        };
+        $job = new CounterJob('wp_queue_cli_maxjobs_count');
         WPQueue::dispatch($job);
     }
 
@@ -121,15 +84,7 @@ test('CLI команда queue:work с параметром --max-time огра�
     delete_option('wp_queue_cli_maxtime_count');
 
     for ($i = 0; $i < 100; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void
-            {
-                $count = (int) get_option('wp_queue_cli_maxtime_count', 0);
-                update_option('wp_queue_cli_maxtime_count', $count + 1);
-                usleep(50000); // 0.05 секунды
-            }
-        };
+        $job = new SlowJob(50000, 'wp_queue_cli_maxtime_count');
         WPQueue::dispatch($job);
     }
 
@@ -147,20 +102,8 @@ test('CLI команда queue:work с параметром --max-time огра�
 });
 
 test('CLI команда queue:list показывает список очередей', function (): void {
-    $job1 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-    $job2 = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->queue = 'emails';
-        }
-
-        public function handle(): void {}
-    };
+    $job1 = new SimpleTestJob();
+    $job2 = new EmailQueueJob();
 
     WPQueue::dispatch($job1);
     WPQueue::dispatch($job2);
@@ -175,10 +118,7 @@ test('CLI команда queue:list показывает список очере
 
 test('CLI команда queue:clear очищает указанную очередь', function (): void {
     for ($i = 0; $i < 5; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void {}
-        };
+        $job = new SimpleTestJob();
         WPQueue::dispatch($job);
     }
 
@@ -210,10 +150,7 @@ test('CLI команда queue:resume возобновляет очередь', 
 test('CLI команда queue:stats показывает статистику очередей', function (): void {
     // Добавляем задачи
     for ($i = 0; $i < 3; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void {}
-        };
+        $job = new SimpleTestJob();
         WPQueue::dispatch($job);
     }
 
@@ -230,19 +167,7 @@ test('CLI команда queue:stats показывает статистику �
 });
 
 test('CLI команда queue:failed показывает проваленные задачи', function (): void {
-    $job = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->maxAttempts = 1;
-        }
-
-        public function handle(): void
-        {
-            throw new \Exception('Test error');
-        }
-    };
+    $job = new AlwaysFailingJob('Test error');
 
     WPQueue::dispatch($job);
 
@@ -256,19 +181,7 @@ test('CLI команда queue:failed показывает проваленны�
 });
 
 test('CLI команда queue:retry повторяет проваленную задачу', function (): void {
-    $job = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->maxAttempts = 1;
-        }
-
-        public function handle(): void
-        {
-            throw new \Exception('First attempt fails');
-        }
-    };
+    $job = new AlwaysFailingJob('First attempt fails');
 
     WPQueue::dispatch($job);
 
@@ -282,7 +195,8 @@ test('CLI команда queue:retry повторяет проваленную �
     expect($failed)->not->toBeEmpty();
 
     // Повторная отправка задачи
-    WPQueue::dispatch($job);
+    $job2 = new AlwaysFailingJob('Second attempt fails');
+    WPQueue::dispatch($job2);
     $worker->runNextJob('default');
 
     // Проверяем что теперь 2 проваленные задачи
@@ -293,20 +207,8 @@ test('CLI команда queue:retry повторяет проваленную �
 });
 
 test('CLI команда queue:flush очищает все очереди', function (): void {
-    $job1 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-    $job2 = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->queue = 'emails';
-        }
-
-        public function handle(): void {}
-    };
+    $job1 = new SimpleTestJob();
+    $job2 = new EmailQueueJob();
 
     WPQueue::dispatch($job1);
     WPQueue::dispatch($job2);
@@ -322,39 +224,27 @@ test('CLI команда queue:flush очищает все очереди', func
 });
 
 test('CLI команда cron:list показывает запланированные задачи', function (): void {
-    $job = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
     $scheduler = WPQueue::scheduler();
-    $scheduler->job($job)->hourly();
+    $scheduler->job(HourlyScheduledJob::class)->hourly();
     $scheduler->register();
 
-    $hook = 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', substr(strrchr(get_class($job), '\\') ?: get_class($job), 1) ?: get_class($job)));
+    $hook = 'wp_queue_hourly_scheduled_job';
     $scheduled = wp_get_scheduled_event($hook);
 
     expect($scheduled)->not->toBeFalse();
 });
 
 test('CLI команда cron:run запускает запланированные задачи', function (): void {
-    $executed = false;
+    delete_option('wp_queue_hourly_executed');
 
-    $job = new class($executed) extends Job
-    {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
+    // Регистрируем задачу в scheduler
+    $scheduler = WPQueue::scheduler();
+    $scheduler->job(HourlyScheduledJob::class)->hourly();
+    $scheduler->register();
 
-        public function handle(): void
-        {
-            $this->executed = true;
-        }
-    };
-
-    // Имитация выполнения cron события
-    do_action('wp_queue_scheduled_job', get_class($job));
+    // Имитация выполнения cron события - вызываем хук напрямую
+    $hook = 'wp_queue_hourly_scheduled_job';
+    do_action($hook);
 
     // Задача добавлена в очередь
     expect(WPQueue::queueSize('default'))->toBe(1);
@@ -363,14 +253,11 @@ test('CLI команда cron:run запускает запланированн�
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    expect($executed)->toBeTrue();
+    expect(get_option('wp_queue_hourly_executed'))->toBeTrue();
 });
 
 test('CLI команда queue:monitor отслеживает состояние очередей', function (): void {
-    $job = new class extends Job
-    {
-        public function handle(): void {}
-    };
+    $job = new SimpleTestJob();
 
     WPQueue::dispatch($job);
 

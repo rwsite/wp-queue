@@ -89,6 +89,16 @@ class Scheduler
     }
 
     /**
+     * Alias for addInterval().
+     */
+    public function interval(string $name, int $seconds, string $display): self
+    {
+        $this->addInterval($name, $seconds, $display);
+
+        return $this;
+    }
+
+    /**
      * Get all scheduled jobs.
      *
      * @return array<string, ScheduledJob>

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-use WPQueue\Jobs\Job;
+use WPQueue\Tests\Fixtures\AlwaysFailingJob;
+use WPQueue\Tests\Fixtures\CounterJob;
+use WPQueue\Tests\Fixtures\EmailQueueJob;
+use WPQueue\Tests\Fixtures\SimpleTestJob;
 use WPQueue\WPQueue;
 
 beforeEach(function (): void {
@@ -26,23 +29,8 @@ afterEach(function (): void {
 
 test('REST API endpoint /queues возвращает список очередей', function (): void {
     // Добавляем задачи в разные очереди
-    $job1 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-    $job2 = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->queue = 'emails';
-        }
-
-        public function handle(): void {}
-    };
-
-    WPQueue::dispatch($job1);
-    WPQueue::dispatch($job2);
+    WPQueue::dispatch(new SimpleTestJob());
+    WPQueue::dispatch(new EmailQueueJob());
 
     $request = new \WP_REST_Request('GET', '/wp-queue/v1/queues');
     $response = rest_do_request($request);
@@ -58,12 +46,7 @@ test('REST API endpoint /queues возвращает список очереде
 });
 
 test('REST API endpoint /queues/{queue} возвращает информацию о конкретной очереди', function (): void {
-    $job = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
-    WPQueue::dispatch($job);
+    WPQueue::dispatch(new SimpleTestJob());
 
     $request = new \WP_REST_Request('GET', '/wp-queue/v1/queues/default');
     $response = rest_do_request($request);
@@ -105,17 +88,8 @@ test('REST API endpoint /queues/{queue}/resume возобновляет очер
 });
 
 test('REST API endpoint /queues/{queue}/clear очищает очередь', function (): void {
-    $job1 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-    $job2 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
-    WPQueue::dispatch($job1);
-    WPQueue::dispatch($job2);
+    WPQueue::dispatch(new SimpleTestJob());
+    WPQueue::dispatch(new SimpleTestJob());
     expect(WPQueue::queueSize('default'))->toBe(2);
 
     $request = new \WP_REST_Request('POST', '/wp-queue/v1/queues/default/clear');
@@ -130,17 +104,8 @@ test('REST API endpoint /queues/{queue}/clear очищает очередь', fu
 });
 
 test('REST API endpoint /queues/{queue}/jobs возвращает список задач в очереди', function (): void {
-    $job1 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-    $job2 = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
-    WPQueue::dispatch($job1);
-    WPQueue::dispatch($job2);
+    WPQueue::dispatch(new SimpleTestJob());
+    WPQueue::dispatch(new SimpleTestJob());
 
     $request = new \WP_REST_Request('GET', '/wp-queue/v1/queues/default/jobs');
     $response = rest_do_request($request);
@@ -156,12 +121,7 @@ test('REST API endpoint /queues/{queue}/jobs возвращает список �
 });
 
 test('REST API endpoint /logs возвращает последние логи', function (): void {
-    $job = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
-    WPQueue::dispatch($job);
+    WPQueue::dispatch(new SimpleTestJob());
 
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
@@ -182,11 +142,7 @@ test('REST API endpoint /logs возвращает последние логи',
 test('REST API endpoint /logs с параметром limit ограничивает количество логов', function (): void {
     // Создаем несколько задач
     for ($i = 0; $i < 5; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void {}
-        };
-        WPQueue::dispatch($job);
+        WPQueue::dispatch(new SimpleTestJob());
     }
 
     $worker = WPQueue::worker();
@@ -206,27 +162,8 @@ test('REST API endpoint /logs с параметром limit ограничива
 });
 
 test('REST API endpoint /logs с параметром status фильтрует логи', function (): void {
-    $successJob = new class extends Job
-    {
-        public function handle(): void {}
-    };
-
-    $failJob = new class extends Job
-    {
-        public function __construct()
-        {
-            parent::__construct();
-            $this->maxAttempts = 1;
-        }
-
-        public function handle(): void
-        {
-            throw new \Exception('Test error');
-        }
-    };
-
-    WPQueue::dispatch($successJob);
-    WPQueue::dispatch($failJob);
+    WPQueue::dispatch(new SimpleTestJob());
+    WPQueue::dispatch(new AlwaysFailingJob('Test error'));
 
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
@@ -249,11 +186,7 @@ test('REST API endpoint /logs с параметром status фильтрует 
 test('REST API endpoint /stats возвращает статистику очередей', function (): void {
     // Добавляем задачи
     for ($i = 0; $i < 3; $i++) {
-        $job = new class extends Job
-        {
-            public function handle(): void {}
-        };
-        WPQueue::dispatch($job);
+        WPQueue::dispatch(new SimpleTestJob());
     }
 
     // Обрабатываем одну задачу
@@ -304,22 +237,9 @@ test('REST API возвращает 404 для несуществующей оч
 });
 
 test('REST API endpoint /queues/{queue}/process запускает обработку очереди', function (): void {
-    $executed = false;
+    delete_option('wp_queue_test_counter');
 
-    $job = new class($executed) extends Job
-    {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
-        public function handle(): void
-        {
-            $this->executed = true;
-        }
-    };
-
-    WPQueue::dispatch($job);
+    WPQueue::dispatch(new CounterJob('wp_queue_test_counter'));
 
     $request = new \WP_REST_Request('POST', '/wp-queue/v1/queues/default/process');
     $response = rest_do_request($request);
@@ -329,5 +249,5 @@ test('REST API endpoint /queues/{queue}/process запускает обрабо�
     $data = $response->get_data();
     expect($data['success'])->toBeTrue();
     expect($data['processed'])->toBeGreaterThan(0);
-    expect($executed)->toBeTrue();
+    expect((int) get_option('wp_queue_test_counter', 0))->toBe(1);
 });

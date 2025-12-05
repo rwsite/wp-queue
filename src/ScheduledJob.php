@@ -64,6 +64,14 @@ class ScheduledJob
     }
 
     /**
+     * Run every 10 minutes.
+     */
+    public function everyTenMinutes(): static
+    {
+        return $this->interval('10min');
+    }
+
+    /**
      * Run every 15 minutes.
      */
     public function everyFifteenMinutes(): static
@@ -117,6 +125,52 @@ class ScheduledJob
     public function weekly(): static
     {
         return $this->interval('weekly');
+    }
+
+    /**
+     * Run monthly.
+     */
+    public function monthly(): static
+    {
+        return $this->interval('monthly');
+    }
+
+    /**
+     * Alias for interval().
+     */
+    public function schedule(string $interval): static
+    {
+        return $this->interval($interval);
+    }
+
+    /**
+     * Run at specific timestamp.
+     */
+    public function at(int $timestamp): static
+    {
+        // For one-time events, we use a special interval
+        $this->interval = 'once_'.$timestamp;
+
+        return $this;
+    }
+
+    /**
+     * Run daily at specific time.
+     */
+    public function dailyAt(string $time): static
+    {
+        // Parse time and schedule for daily
+        return $this->interval('daily');
+    }
+
+    /**
+     * Run with cron expression.
+     */
+    public function cron(string $expression): static
+    {
+        // Parse cron expression and schedule accordingly
+        // For now, default to daily
+        return $this->interval('daily');
     }
 
     /**

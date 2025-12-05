@@ -24,7 +24,7 @@
   <a href="#admin-ui">Admin UI</a> •
   <a href="#rest-api">REST API</a> •
   <a href="#testing">Testing</a> •
-  <a href="README.ru.md">🇷🇺 Русский</a>
+  <a href="README.ru.md">RU version</a>
 </p>
 
 ---

@@ -49,16 +49,12 @@ jobs:
   e2e:
     name: E2E Tests (WordPress ${{ matrix.wordpress-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # Жёсткий таймаут — не более 10 минут
     strategy:
       fail-fast: false
       matrix:
         php-version: [ "8.3" ]
         wordpress-version: [ "latest", "6.7" ]
-        include:
-          - wordpress-version: latest
-            wp-version-string: "latest"
-          - wordpress-version: "6.7"
-            wp-version-string: "6.7"
 
     services:
       mysql:
@@ -70,7 +66,7 @@ jobs:
           MYSQL_PASSWORD: wordpress
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=3s --health-retries=5
 
     steps:
       - name: Checkout
@@ -81,8 +77,9 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           extensions: mysqli, pdo_mysql
-          coverage: pcov
+          coverage: none  # Отключаем coverage для E2E — ускоряет тесты
           tools: composer:v2, wp-cli
+          ini-values: memory_limit=512M
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -92,56 +89,70 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
 
+      - name: Cache WordPress
+        uses: actions/cache@v4
+        with:
+          path: /tmp/wordpress
+          key: wordpress-${{ matrix.wordpress-version }}-v1
+          restore-keys: |
+            wordpress-${{ matrix.wordpress-version }}-
+
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist --no-dev
 
       - name: Setup WordPress
         run: |
-          mkdir -p /tmp/wordpress
-          cd /tmp/wordpress
+          # Проверяем, есть ли WordPress в кэше
+          if [ ! -f /tmp/wordpress/wp-load.php ]; then
+            echo "Downloading WordPress..."
+            mkdir -p /tmp/wordpress
+            cd /tmp/wordpress
 
-          # Download WordPress
-          if [ "${{ matrix.wordpress-version }}" = "latest" ]; then
-            wp core download --version=latest --allow-root
+            if [ "${{ matrix.wordpress-version }}" = "latest" ]; then
+              wp core download --version=latest --allow-root
+            else
+              wp core download --version=${{ matrix.wordpress-version }} --allow-root
+            fi
           else
-            wp core download --version=${{ matrix.wordpress-version }} --allow-root
+            echo "Using cached WordPress"
           fi
 
-          # Configure WordPress
+          cd /tmp/wordpress
+
+          # Конфигурация (всегда пересоздаём — БД новая)
           wp config create \
             --dbname=wordpress_test \
             --dbuser=wordpress \
             --dbpass=wordpress \
             --dbhost=127.0.0.1 \
+            --force \
             --allow-root
 
-          # Install WordPress
+          # Установка WordPress
           wp core install \
             --url=http://localhost:8080 \
             --title="WP Queue Test" \
             --admin_user=admin \
             --admin_password=admin \
             --admin_email=admin@example.com \
+            --skip-email \
             --allow-root
 
-          # Create uploads directory
           mkdir -p wp-content/uploads
           chmod 755 wp-content/uploads
 
       - name: Install Plugin
         run: |
           cd /tmp/wordpress
+          rm -rf wp-content/plugins/wp-queue 2>/dev/null || true
           ln -s ${{ github.workspace }} wp-content/plugins/wp-queue
-
-          # Activate plugin
           wp plugin activate wp-queue --allow-root
 
       - name: Run E2E tests
+        timeout-minutes: 5  # Таймаут на сами тесты
         run: |
           cd ${{ github.workspace }}
-          WP_TESTS_DIR=/tmp/wordpress-tests-lib \
-          WP_CORE_DIR=/tmp/wordpress \
-          ./vendor/bin/pest tests/Feature --configuration=phpunit-e2e.xml
+          ./vendor/bin/pest tests/Feature --configuration=phpunit-e2e.xml --stop-on-failure --no-coverage
         env:
           WP_TESTS_DIR: /tmp/wordpress-tests-lib
           WP_CORE_DIR: /tmp/wordpress

@@ -6,7 +6,13 @@
          cacheDirectory=".phpunit.cache"
          executionOrder="depends,defects"
          shortenArraysForExportThreshold="10"
-         testdox="true">
+         testdox="true"
+         defaultTimeLimit="10"
+         enforceTimeLimit="true"
+         timeoutForSmallTests="5"
+         timeoutForMediumTests="15"
+         timeoutForLargeTests="30"
+         stopOnFailure="true">
     <testsuites>
         <testsuite name="E2E">
             <directory>tests/Feature</directory>

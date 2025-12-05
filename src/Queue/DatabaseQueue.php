@@ -118,6 +118,9 @@ class DatabaseQueue implements QueueInterface
      */
     protected function getQueue(string $queue): array
     {
+        // Clear cache to ensure we get fresh data from DB
+        wp_cache_delete($this->queueKey($queue), 'site-options');
+
         return get_site_option($this->queueKey($queue), []);
     }
 
@@ -149,7 +152,7 @@ class DatabaseQueue implements QueueInterface
 
     protected function queueKey(string $queue): string
     {
-        return self::PREFIX.'jobs_'.$queue;
+        return self::PREFIX . 'jobs_' . $queue;
     }
 
     /**
@@ -163,14 +166,14 @@ class DatabaseQueue implements QueueInterface
             return ['default'];
         }
 
-        $prefix = self::PREFIX.'jobs_';
+        $prefix = self::PREFIX . 'jobs_';
         $results = $wpdb->get_col(
             $wpdb->prepare(
                 "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-                $prefix.'%',
+                $prefix . '%',
             ),
         );
 
-        return array_map(fn ($key) => str_replace($prefix, '', $key), $results);
+        return array_map(fn($key) => str_replace($prefix, '', $key), $results);
     }
 }

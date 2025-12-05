@@ -9,9 +9,13 @@ use WPQueue\Tests\Fixtures\SimpleTestJob;
 use WPQueue\WPQueue;
 
 beforeEach(function (): void {
-    // Очистка всех очередей и статусов
+    // Очистка очередей (но не счётчиков)
+    WPQueue::clear('default');
+    WPQueue::clear('emails');
+
+    // Очистка счётчиков и статусов
     global $wpdb;
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%' AND option_name NOT LIKE 'wp_queue_jobs_%'");
 
     // Явная очистка статуса паузы
     delete_site_option('wp_queue_status_default');

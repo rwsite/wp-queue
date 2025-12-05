@@ -14,9 +14,17 @@ use WPQueue\Tests\Fixtures\SlowJob;
 use WPQueue\WPQueue;
 
 beforeEach(function (): void {
-    // Очистка всех очередей перед каждым тестом
+    // Очистка очередей (но не счётчиков)
+    WPQueue::clear('default');
+    WPQueue::clear('emails');
+
+    // Очистка счётчиков и статусов
     global $wpdb;
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%' AND option_name NOT LIKE 'wp_queue_jobs_%'");
+
+    // Явная очистка статуса паузы
+    delete_site_option('wp_queue_status_default');
+    delete_site_option('wp_queue_status_emails');
 });
 
 afterEach(function (): void {

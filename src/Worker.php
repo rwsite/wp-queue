@@ -49,6 +49,11 @@ class Worker
      */
     public function runNextJob(string $queue = 'default'): bool
     {
+        // Check if we should stop before processing
+        if ($this->shouldStop()) {
+            return false;
+        }
+
         $connection = $this->manager->connection();
         $job = $connection->pop($queue);
 

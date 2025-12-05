@@ -46,6 +46,8 @@
     },
     "scripts": {
         "test": "pest",
+        "test:unit": "pest tests/Unit",
+        "test:e2e": "pest tests/Feature --configuration=phpunit-e2e.xml",
         "test:coverage": "pest --coverage",
         "lint": "pint",
         "lint:check": "pint --test"

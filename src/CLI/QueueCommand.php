@@ -56,7 +56,7 @@ class QueueCommand
         $results = $wpdb->get_col(
             $wpdb->prepare(
                 "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-                'wp_queue_jobs_%'
+                'wp_queue_jobs_%',
             ),
         );
 
@@ -127,7 +127,7 @@ class QueueCommand
         $processed = 0;
 
         while ($processed < $limit) {
-            if (! $worker->processNext($queue)) {
+            if (! $worker->runNextJob($queue)) {
                 break;
             }
             $processed++;
@@ -250,7 +250,7 @@ class QueueCommand
             return;
         }
 
-        $items = array_map(fn ($log) => [
+        $items = array_map(fn($log) => [
             'id' => $log['job_id'] ?? '-',
             'job' => $log['job_class'],
             'queue' => $log['queue'],
@@ -302,8 +302,8 @@ class QueueCommand
             ['key' => 'PHP Version', 'value' => $report['php_version']],
             ['key' => 'WordPress Version', 'value' => $report['wp_version']],
             ['key' => 'Memory Limit', 'value' => $report['memory_limit_formatted']],
-            ['key' => 'Memory Usage', 'value' => $report['current_memory_formatted'].' ('.$report['memory_percent'].'%)'],
-            ['key' => 'Max Execution Time', 'value' => $report['max_execution_time'].'s'],
+            ['key' => 'Memory Usage', 'value' => $report['current_memory_formatted'] . ' (' . $report['memory_percent'] . '%)'],
+            ['key' => 'Max Execution Time', 'value' => $report['max_execution_time'] . 's'],
             ['key' => 'WP-Cron Disabled', 'value' => $report['wp_cron_disabled'] ? 'Yes' : 'No'],
             ['key' => 'Loopback Status', 'value' => $report['loopback']['status']],
             ['key' => 'Timezone', 'value' => $report['timezone']],

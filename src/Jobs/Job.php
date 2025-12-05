@@ -126,27 +126,88 @@ abstract class Job implements JobInterface, ShouldQueue
         return bin2hex(random_bytes(16));
     }
 
+    /**
+     * Serialize all properties including child class properties.
+     * Uses Reflection to capture private/protected properties from child classes.
+     */
     public function __serialize(): array
     {
-        return [
-            'id' => $this->id,
-            'queue' => $this->queue,
-            'attempts' => $this->attempts,
-            'maxAttempts' => $this->maxAttempts,
-            'timeout' => $this->timeout,
-            'delay' => $this->delay,
-            'createdAt' => $this->createdAt,
-        ];
+        $data = [];
+        $reflection = new \ReflectionClass($this);
+
+        // Get all properties from this class and parent classes
+        do {
+            foreach ($reflection->getProperties() as $property) {
+                $property->setAccessible(true);
+                $name = $property->getName();
+
+                // Skip uninitialized typed properties
+                if ($property->hasType() && !$property->isInitialized($this)) {
+                    continue;
+                }
+
+                // Use class name prefix for private properties to avoid conflicts
+                if ($property->isPrivate() && $property->getDeclaringClass()->getName() !== self::class) {
+                    $key = $property->getDeclaringClass()->getName() . '::' . $name;
+                } else {
+                    $key = $name;
+                }
+                $data[$key] = $property->getValue($this);
+            }
+        } while ($reflection = $reflection->getParentClass());
+
+        return $data;
     }
 
+    /**
+     * Unserialize all properties including child class properties.
+     */
     public function __unserialize(array $data): void
     {
-        $this->id = $data['id'];
-        $this->queue = $data['queue'];
-        $this->attempts = $data['attempts'];
-        $this->maxAttempts = $data['maxAttempts'];
-        $this->timeout = $data['timeout'];
-        $this->delay = $data['delay'];
-        $this->createdAt = $data['createdAt'];
+        $reflection = new \ReflectionClass($this);
+
+        // Build a map of all properties
+        $properties = [];
+        $ref = $reflection;
+        do {
+            foreach ($ref->getProperties() as $property) {
+                $name = $property->getName();
+                if ($property->isPrivate() && $property->getDeclaringClass()->getName() !== self::class) {
+                    $key = $property->getDeclaringClass()->getName() . '::' . $name;
+                } else {
+                    $key = $name;
+                }
+                $properties[$key] = $property;
+            }
+        } while ($ref = $ref->getParentClass());
+
+        // Restore values from serialized data
+        foreach ($data as $key => $value) {
+            if (isset($properties[$key])) {
+                $properties[$key]->setAccessible(true);
+                $properties[$key]->setValue($this, $value);
+            }
+        }
+
+        // Initialize any remaining uninitialized typed properties with defaults
+        foreach ($properties as $key => $property) {
+            if ($property->hasType() && !$property->isInitialized($this)) {
+                $type = $property->getType();
+                if ($type instanceof \ReflectionNamedType && !$type->allowsNull()) {
+                    $default = match ($type->getName()) {
+                        'array' => [],
+                        'string' => '',
+                        'int' => 0,
+                        'float' => 0.0,
+                        'bool' => false,
+                        default => null,
+                    };
+                    if ($default !== null) {
+                        $property->setAccessible(true);
+                        $property->setValue($this, $default);
+                    }
+                }
+            }
+        }
     }
 }

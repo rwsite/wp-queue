@@ -5,37 +5,44 @@ declare(strict_types=1);
 namespace WPQueue\Storage;
 
 use WPQueue\Contracts\JobInterface;
+use WPQueue\WPQueue;
 
 class LogStorage
 {
-    protected const OPTION_KEY = 'wp_queue_logs';
-
-    protected const MAX_LOGS = 1000;
-
     /**
      * Log a job event.
      */
     public function log(string $status, JobInterface $job, ?string $message = null): void
     {
-        $logs = $this->all();
+        global $wpdb;
 
-        $logs[] = [
-            'id' => bin2hex(random_bytes(8)),
-            'job_id' => $job->getId(),
+        $table = $this->getTableName();
+
+        $data = [
+            'job_id' => (string) $job->getId(),
             'job_class' => $job::class,
-            'queue' => $job->getQueue(),
+            'queue' => (string) $job->getQueue(),
             'status' => $status,
             'message' => $message,
-            'attempts' => $job->getAttempts(),
-            'timestamp' => time(),
+            'attempts' => (int) $job->getAttempts(),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ];
 
-        // Keep only last N logs
-        if (count($logs) > self::MAX_LOGS) {
-            $logs = array_slice($logs, -self::MAX_LOGS);
-        }
+        $formats = ['%s', '%s', '%s', '%s', '%s', '%d', '%s'];
 
-        update_site_option(self::OPTION_KEY, $logs);
+        try {
+            $result = $wpdb->insert($table, $data, $formats);
+
+            if ($result === false && $this->isMissingTableError($wpdb->last_error)) {
+                WPQueue::install();
+                $wpdb->insert($this->getTableName(), $data, $formats);
+            }
+        } catch (\Throwable $e) {
+            if ($this->isMissingTableError($e->getMessage())) {
+                WPQueue::install();
+                $wpdb->insert($this->getTableName(), $data, $formats);
+            }
+        }
     }
 
     /**
@@ -45,7 +52,24 @@ class LogStorage
      */
     public function all(): array
     {
-        return get_site_option(self::OPTION_KEY, []);
+        global $wpdb;
+
+        $table = $this->getTableName();
+
+        $rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY created_at ASC", ARRAY_A) ?: [];
+
+        return array_map(static function (array $row): array {
+            return [
+                'id' => (string) ($row['id'] ?? ''),
+                'job_id' => (string) ($row['job_id'] ?? ''),
+                'job_class' => (string) ($row['job_class'] ?? ''),
+                'queue' => (string) ($row['queue'] ?? ''),
+                'status' => (string) ($row['status'] ?? ''),
+                'message' => $row['message'] ?? null,
+                'attempts' => isset($row['attempts']) ? (int) $row['attempts'] : 0,
+                'timestamp' => isset($row['created_at']) ? strtotime((string) $row['created_at']) : time(),
+            ];
+        }, $rows);
     }
 
     /**
@@ -68,7 +92,7 @@ class LogStorage
      */
     public function forJob(string $jobClass): array
     {
-        return array_filter($this->all(), fn ($log) => $log['job_class'] === $jobClass);
+        return array_filter($this->all(), fn($log) => $log['job_class'] === $jobClass);
     }
 
     /**
@@ -78,7 +102,27 @@ class LogStorage
      */
     public function failed(): array
     {
-        return array_filter($this->all(), fn ($log) => $log['status'] === 'failed');
+        global $wpdb;
+
+        $table = $this->getTableName();
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE status = %s ORDER BY created_at DESC", 'failed'),
+            ARRAY_A
+        ) ?: [];
+
+        return array_map(static function (array $row): array {
+            return [
+                'id' => (string) ($row['id'] ?? ''),
+                'job_id' => (string) ($row['job_id'] ?? ''),
+                'job_class' => (string) ($row['job_class'] ?? ''),
+                'queue' => (string) ($row['queue'] ?? ''),
+                'status' => (string) ($row['status'] ?? ''),
+                'message' => $row['message'] ?? null,
+                'attempts' => isset($row['attempts']) ? (int) $row['attempts'] : 0,
+                'timestamp' => isset($row['created_at']) ? strtotime((string) $row['created_at']) : time(),
+            ];
+        }, $rows);
     }
 
     /**
@@ -88,7 +132,27 @@ class LogStorage
      */
     public function completed(): array
     {
-        return array_filter($this->all(), fn ($log) => $log['status'] === 'completed');
+        global $wpdb;
+
+        $table = $this->getTableName();
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE status = %s ORDER BY created_at DESC", 'completed'),
+            ARRAY_A
+        ) ?: [];
+
+        return array_map(static function (array $row): array {
+            return [
+                'id' => (string) ($row['id'] ?? ''),
+                'job_id' => (string) ($row['job_id'] ?? ''),
+                'job_class' => (string) ($row['job_class'] ?? ''),
+                'queue' => (string) ($row['queue'] ?? ''),
+                'status' => (string) ($row['status'] ?? ''),
+                'message' => $row['message'] ?? null,
+                'attempts' => isset($row['attempts']) ? (int) $row['attempts'] : 0,
+                'timestamp' => isset($row['created_at']) ? strtotime((string) $row['created_at']) : time(),
+            ];
+        }, $rows);
     }
 
     /**
@@ -96,15 +160,16 @@ class LogStorage
      */
     public function clearOld(int $daysOld = 7): int
     {
-        $cutoff = time() - ($daysOld * DAY_IN_SECONDS);
-        $logs = $this->all();
-        $original = count($logs);
+        global $wpdb;
 
-        $logs = array_filter($logs, fn ($log) => $log['timestamp'] >= $cutoff);
+        $table = $this->getTableName();
+        $cutoff = gmdate('Y-m-d H:i:s', time() - ($daysOld * DAY_IN_SECONDS));
 
-        update_site_option(self::OPTION_KEY, array_values($logs));
+        $deleted = $wpdb->query(
+            $wpdb->prepare("DELETE FROM {$table} WHERE created_at < %s", $cutoff)
+        );
 
-        return $original - count($logs);
+        return (int) $deleted;
     }
 
     /**
@@ -112,7 +177,10 @@ class LogStorage
      */
     public function clear(): void
     {
-        delete_site_option(self::OPTION_KEY);
+        global $wpdb;
+
+        $table = $this->getTableName();
+        $wpdb->query("TRUNCATE TABLE {$table}");
     }
 
     /**
@@ -122,27 +190,59 @@ class LogStorage
      */
     public function metrics(): array
     {
-        $logs = $this->all();
+        global $wpdb;
+
+        $table = $this->getTableName();
+
+        $rows = $wpdb->get_results("SELECT queue, job_class, status FROM {$table}", ARRAY_A) ?: [];
 
         $metrics = [
-            'total' => count($logs),
+            'total' => count($rows),
             'completed' => 0,
             'failed' => 0,
             'by_queue' => [],
             'by_job' => [],
         ];
 
-        foreach ($logs as $log) {
-            if ($log['status'] === 'completed') {
+        foreach ($rows as $row) {
+            $status = (string) ($row['status'] ?? '');
+            $queue = (string) ($row['queue'] ?? '');
+            $jobClass = (string) ($row['job_class'] ?? '');
+
+            if ($status === 'completed') {
                 $metrics['completed']++;
-            } elseif ($log['status'] === 'failed') {
+            } elseif ($status === 'failed') {
                 $metrics['failed']++;
             }
 
-            $metrics['by_queue'][$log['queue']] = ($metrics['by_queue'][$log['queue']] ?? 0) + 1;
-            $metrics['by_job'][$log['job_class']] = ($metrics['by_job'][$log['job_class']] ?? 0) + 1;
+            if ($queue !== '') {
+                $metrics['by_queue'][$queue] = ($metrics['by_queue'][$queue] ?? 0) + 1;
+            }
+
+            if ($jobClass !== '') {
+                $metrics['by_job'][$jobClass] = ($metrics['by_job'][$jobClass] ?? 0) + 1;
+            }
         }
 
         return $metrics;
+    }
+    protected function getTableName(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'wp_queue_logs';
+    }
+
+    protected function isMissingTableError(?string $message): bool
+    {
+        if (! $message) {
+            return false;
+        }
+
+        $message = strtolower($message);
+
+        return str_contains($message, 'no such table')
+            || str_contains($message, 'doesn\'t exist')
+            || str_contains($message, 'does not exist');
     }
 }

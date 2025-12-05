@@ -23,6 +23,8 @@ final class WPQueue
 {
     private static ?self $instance = null;
 
+    private static bool $booted = false;
+
     private QueueManager $manager;
 
     private Dispatcher $dispatcher;
@@ -53,6 +55,12 @@ final class WPQueue
      */
     public static function boot(): void
     {
+        if (self::$booted) {
+            return;
+        }
+
+        self::$booted = true;
+
         $instance = self::getInstance();
 
         // Allow plugins to register scheduled jobs
@@ -61,17 +69,46 @@ final class WPQueue
             $instance->scheduler->register();
         });
 
-        // Register cron handler for processing queue
+        // Register cron handler for processing queues
         add_action('wp_queue_process', static function (string $queue = 'default'): void {
-            $instance = self::getInstance();
-            $instance->worker->setMaxJobs(10);
-            $instance->worker->setMaxTime(20);
+            error_log('WP Queue: Processing started for queue: ' . $queue);
 
-            while (! $instance->worker->shouldStop()) {
-                if (! $instance->worker->runNextJob($queue)) {
-                    break;
+            $instance = self::getInstance();
+            $instance->worker->setMaxJobs(50);
+            $instance->worker->setMaxTime(50);
+
+            // Start with the queue passed from the cron event (default: "default")
+            $queues = [$queue];
+
+            // Auto-discover all queues stored in options (wp_queue_jobs_*)
+            if (function_exists('get_option')) {
+                global $wpdb;
+
+                $results = $wpdb->get_col(
+                    $wpdb->prepare(
+                        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                        'wp_queue_jobs_%',
+                    ),
+                );
+
+                foreach ($results as $optionName) {
+                    $name = str_replace('wp_queue_jobs_', '', $optionName);
+                    if (! in_array($name, $queues, true)) {
+                        $queues[] = $name;
+                    }
                 }
             }
+
+            // Process each discovered queue until worker reaches its limits
+            foreach ($queues as $queueName) {
+                while (! $instance->worker->shouldStop()) {
+                    if (! $instance->worker->runNextJob($queueName)) {
+                        break;
+                    }
+                }
+            }
+
+            error_log('WP Queue: Processing completed. Jobs processed: ' . $instance->worker->getJobsProcessed());
         });
 
         // Schedule queue processing
@@ -93,7 +130,6 @@ final class WPQueue
         if (defined('WP_CLI') && WP_CLI) {
             self::registerCliCommands();
         }
-
     }
 
     /**
@@ -110,10 +146,7 @@ final class WPQueue
      */
     public static function activate(): void
     {
-        // Schedule queue processing
-        if (! wp_next_scheduled('wp_queue_process')) {
-            wp_schedule_event(time(), 'min', 'wp_queue_process');
-        }
+        self::install();
     }
 
     /**
@@ -121,7 +154,98 @@ final class WPQueue
      */
     public static function deactivate(): void
     {
+        self::uninstall();
+    }
+
+    public static function install(): void
+    {
+        // Schedule queue processing
+        if (! wp_next_scheduled('wp_queue_process')) {
+            wp_schedule_event(time(), 'min', 'wp_queue_process');
+        }
+
+        self::createLogsTable();
+        self::migrateLogsOption();
+    }
+
+    public static function uninstall(): void
+    {
+        // Отключаем крон
         wp_clear_scheduled_hook('wp_queue_process');
+
+        // Удаляем таблицу логов при деактивации
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'wp_queue_logs';
+        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+    }
+
+    protected static function createLogsTable(): void
+    {
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'wp_queue_logs';
+        $charsetCollate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            job_id varchar(64) NOT NULL,
+            job_class varchar(255) NOT NULL,
+            queue varchar(64) NOT NULL,
+            status varchar(32) NOT NULL,
+            message text NULL,
+            attempts smallint(5) unsigned NOT NULL,
+            created_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY status (status),
+            KEY queue (queue),
+            KEY created_at (created_at)
+        ) {$charsetCollate};";
+
+        if (! function_exists('dbDelta')) {
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        }
+
+        \dbDelta($sql);
+    }
+
+    protected static function migrateLogsOption(): void
+    {
+        $optionKey = 'wp_queue_logs';
+        $logs = get_option($optionKey, []);
+
+        if (empty($logs) || ! is_array($logs)) {
+            return;
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'wp_queue_logs';
+
+        foreach ($logs as $log) {
+            $wpdb->insert(
+                $table,
+                [
+                    'job_id' => isset($log['job_id']) ? (string) $log['job_id'] : '',
+                    'job_class' => isset($log['job_class']) ? (string) $log['job_class'] : '',
+                    'queue' => isset($log['queue']) ? (string) $log['queue'] : 'default',
+                    'status' => isset($log['status']) ? (string) $log['status'] : 'completed',
+                    'message' => $log['message'] ?? null,
+                    'attempts' => isset($log['attempts']) ? (int) $log['attempts'] : 0,
+                    'created_at' => isset($log['timestamp']) ? gmdate('Y-m-d H:i:s', (int) $log['timestamp']) : gmdate('Y-m-d H:i:s'),
+                ],
+                [
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%d',
+                    '%s',
+                ]
+            );
+        }
+
+        delete_option($optionKey);
     }
 
     /**
@@ -205,7 +329,7 @@ final class WPQueue
      */
     public static function isProcessing(string $queue = 'default'): bool
     {
-        return (bool) get_site_transient('wp_queue_lock_'.$queue);
+        return (bool) get_site_transient('wp_queue_lock_' . $queue);
     }
 
     /**
@@ -221,7 +345,7 @@ final class WPQueue
      */
     public static function pause(string $queue = 'default'): void
     {
-        update_site_option('wp_queue_status_'.$queue, 'paused');
+        update_site_option('wp_queue_status_' . $queue, 'paused');
     }
 
     /**
@@ -229,7 +353,7 @@ final class WPQueue
      */
     public static function resume(string $queue = 'default'): void
     {
-        delete_site_option('wp_queue_status_'.$queue);
+        delete_site_option('wp_queue_status_' . $queue);
     }
 
     /**
@@ -237,7 +361,7 @@ final class WPQueue
      */
     public static function isPaused(string $queue = 'default'): bool
     {
-        return get_site_option('wp_queue_status_'.$queue) === 'paused';
+        return get_site_option('wp_queue_status_' . $queue) === 'paused';
     }
 
     /**

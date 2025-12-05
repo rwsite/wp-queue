@@ -131,7 +131,7 @@ class RestApi
         $results = $wpdb->get_col(
             $wpdb->prepare(
                 "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-                'wp_queue_jobs_%'
+                'wp_queue_jobs_%',
             ),
         );
 

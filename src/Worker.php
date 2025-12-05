@@ -178,6 +178,11 @@ class Worker
         return $this->memoryLimit;
     }
 
+    public function getJobsProcessed(): int
+    {
+        return $this->jobsProcessed;
+    }
+
     public function setLogger(LogStorage $logger): void
     {
         $this->logger = $logger;

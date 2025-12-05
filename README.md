@@ -234,6 +234,8 @@ WPQueue::logs()->clearOld(7);  // Clear logs older than 7 days
 
 Access via **WP Admin → WP Queue**
 
+
+
 ### Tabs
 
 | Tab | Description |
@@ -343,10 +345,23 @@ add_action('wp_queue_schedule', fn($s) => $s->job(MyHourlyTask::class));
 ## Testing
 
 ```bash
-composer test          # Run tests
-composer test:coverage # With coverage
-composer lint          # Code style
+# Unit-тесты (быстрые, изолированные)
+composer test:unit
+
+# E2E тесты (с реальным WordPress)
+composer test:e2e
+
+# Все тесты
+composer test
+
+# С покрытием кода
+composer test:coverage
+
+# Проверка стиля кода
+composer lint
 ```
+
+Подробнее: [tests/README.md](tests/README.md)
 
 ## License
 

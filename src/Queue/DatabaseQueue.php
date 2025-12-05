@@ -37,10 +37,20 @@ class DatabaseQueue implements QueueInterface
         }
 
         $now = time();
+        $staleThreshold = 300;
 
         foreach ($jobs as $id => $data) {
-            if ($data['available_at'] <= $now && $data['reserved_at'] === null) {
-                // Reserve the job
+            $isStale = $data['reserved_at'] !== null && ($now - $data['reserved_at']) > $staleThreshold;
+
+            if ($data['available_at'] <= $now && ($data['reserved_at'] === null || $isStale)) {
+                if ($isStale) {
+                    error_log(sprintf(
+                        'WP Queue: Releasing stale job %s (reserved for %d seconds)',
+                        $id,
+                        $now - $data['reserved_at'],
+                    ));
+                }
+
                 $jobs[$id]['reserved_at'] = $now;
                 $this->saveQueue($queue, $jobs);
 
@@ -62,10 +72,22 @@ class DatabaseQueue implements QueueInterface
             if (isset($jobs[$jobId])) {
                 unset($jobs[$jobId]);
                 $this->saveQueue($queue, $jobs);
+                
+                error_log(sprintf(
+                    'WP Queue: Deleted job %s from queue %s. Remaining: %d',
+                    $jobId,
+                    $queue,
+                    count($jobs)
+                ));
 
                 return true;
             }
         }
+        
+        error_log(sprintf(
+            'WP Queue: Failed to delete job %s - not found in any queue',
+            $jobId
+        ));
 
         return false;
     }
@@ -78,6 +100,8 @@ class DatabaseQueue implements QueueInterface
         if (isset($jobs[$job->getId()])) {
             $jobs[$job->getId()]['reserved_at'] = null;
             $jobs[$job->getId()]['available_at'] = time() + $delay;
+            $jobs[$job->getId()]['payload'] = serialize($job);
+            $jobs[$job->getId()]['attempts'] = $job->getAttempts();
             $this->saveQueue($queue, $jobs);
         }
     }

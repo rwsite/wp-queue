@@ -15,9 +15,13 @@ beforeEach(function (): void {
         define('WP_CLI', true);
     }
 
-    // Очистка всех очередей
+    // Очистка всех очередей и статусов
     global $wpdb;
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'wp_queue_%'");
+
+    // Явная очистка статуса паузы
+    delete_site_option('wp_queue_status_default');
+    delete_site_option('wp_queue_status_emails');
 });
 
 afterEach(function (): void {

@@ -392,14 +392,70 @@ add_action('wp_queue_schedule', fn($s) => $s->job(MyHourlyTask::class));
 
 ## Testing
 
+WP Queue имеет два типа тестов:
+
+### Unit Tests (быстрые)
+
+Изолированные тесты без WordPress окружения:
+
 ```bash
-# Unit-тесты (быстрые, изолированные)
 composer test:unit
+```
 
-# E2E тесты (с реальным WordPress)
+### E2E Tests (полные)
+
+Интеграционные тесты с реальным WordPress:
+
+#### В GitHub Actions
+
+Автоматически запускаются при push в `main`/`develop` ветки:
+
+- ✅ WordPress latest + PHP 8.3
+- ✅ WordPress 6.6 + PHP 8.3
+
+#### Локально с Docker
+
+```bash
+# Автоматический запуск с Docker
+composer test:e2e:docker
+
+# Или вручную:
+# Запуск WordPress окружения
+docker-compose up -d
+
+# Дождаться загрузки (WordPress + MySQL)
+sleep 30
+
+# Запуск E2E тестов
 composer test:e2e
+```
 
-# Все тесты
+#### Ручной запуск
+
+Если у вас уже есть WordPress установка:
+
+```bash
+# Установить WP-CLI
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+sudo mv wp-cli.phar /usr/local/bin/wp
+
+# Настроить WordPress
+wp core download
+wp config create --dbname=wp_test --dbuser=root --dbpass=password
+wp core install --url=http://localhost --title="Test" --admin_user=admin --admin_email=admin@example.com
+
+# Активировать плагин
+wp plugin activate wp-queue
+
+# Запустить тесты
+WP_CORE_DIR=/path/to/wordpress composer test:e2e
+```
+
+### Запуск всех тестов
+
+```bash
+# Unit + E2E
 composer test
 
 # С покрытием кода

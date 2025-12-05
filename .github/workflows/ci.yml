@@ -46,6 +46,106 @@ jobs:
       - name: Run Unit tests
         run: ./vendor/bin/pest tests/Unit
 
+  e2e:
+    name: E2E Tests (WordPress ${{ matrix.wordpress-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [ "8.3" ]
+        wordpress-version: [ "latest", "6.6" ]
+        include:
+          - wordpress-version: latest
+            wp-version-string: "latest"
+          - wordpress-version: "6.6"
+            wp-version-string: "6.6"
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: wordpress
+          MYSQL_DATABASE: wordpress_test
+          MYSQL_USER: wordpress
+          MYSQL_PASSWORD: wordpress
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mysqli, pdo_mysql
+          coverage: pcov
+          tools: composer:v2, wp-cli
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Setup WordPress
+        run: |
+          mkdir -p /tmp/wordpress
+          cd /tmp/wordpress
+
+          # Download WordPress
+          if [ "${{ matrix.wordpress-version }}" = "latest" ]; then
+            wp core download --version=latest --allow-root
+          else
+            wp core download --version=${{ matrix.wordpress-version }} --allow-root
+          fi
+
+          # Configure WordPress
+          wp config create \
+            --dbname=wordpress_test \
+            --dbuser=wordpress \
+            --dbpass=wordpress \
+            --dbhost=127.0.0.1 \
+            --allow-root
+
+          # Install WordPress
+          wp core install \
+            --url=http://localhost:8080 \
+            --title="WP Queue Test" \
+            --admin_user=admin \
+            --admin_password=admin \
+            --admin_email=admin@example.com \
+            --allow-root
+
+          # Create uploads directory
+          mkdir -p wp-content/uploads
+          chmod 755 wp-content/uploads
+
+      - name: Install Plugin
+        run: |
+          cd /tmp/wordpress
+          ln -s ${{ github.workspace }} wp-content/plugins/wp-queue
+
+          # Activate plugin
+          wp plugin activate wp-queue --allow-root
+
+      - name: Run E2E tests
+        run: |
+          cd ${{ github.workspace }}
+          WP_TESTS_DIR=/tmp/wordpress-tests-lib \
+          WP_CORE_DIR=/tmp/wordpress \
+          ./vendor/bin/pest tests/Feature --configuration=phpunit-e2e.xml
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
+          WP_CORE_DIR: /tmp/wordpress
+
   lint:
     name: Fix Code Style
     runs-on: ubuntu-latest

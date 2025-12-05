@@ -98,7 +98,7 @@ jobs:
             wordpress-${{ matrix.wordpress-version }}-
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist --no-dev
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Setup WordPress
         run: |

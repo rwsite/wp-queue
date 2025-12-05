@@ -5,7 +5,7 @@ Tags: queue, cron, background-processing, jobs, scheduler
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,7 @@ WP Queue is a modern, scalable solution for WordPress background processing. It 
 = Features =
 
 * **Laravel-style Job Dispatching** - Clean, fluent API with PHP 8 attributes
-* **Multiple Queue Drivers** - Database, Sync, and extensible for Redis
+* **Multiple Queue Drivers** - Database, Redis, Memcached, Sync with auto-detection
 * **Automatic Retries** - Exponential backoff for failed jobs
 * **Job Scheduling** - Cron-like scheduling with fluent methods
 * **WP-Cron Monitor** - View, run, pause, resume, and edit cron events
@@ -115,7 +115,23 @@ WP Queue is lighter and uses modern PHP features. Action Scheduler is more matur
 
 = Can I use Redis as a queue driver? =
 
-Yes, you can extend the QueueManager with custom drivers including Redis.
+Yes! Redis is supported out of the box. Add to wp-config.php:
+
+`
+define('WP_QUEUE_DRIVER', 'redis');
+define('WP_REDIS_HOST', '127.0.0.1');
+define('WP_REDIS_PORT', 6379);
+`
+
+If you use the Redis Object Cache plugin, WP Queue will automatically use the same settings.
+
+= What queue drivers are available? =
+
+* **database** - Uses wp_options table (default)
+* **redis** - Redis server (requires phpredis extension)
+* **memcached** - Memcached server (requires memcached extension)
+* **sync** - Synchronous execution (no queue)
+* **auto** - Automatically selects best available driver
 
 = Is it compatible with multisite? =
 
@@ -131,6 +147,13 @@ Yes, WP Queue works with WordPress multisite installations.
 
 == Changelog ==
 
+= 1.1.0 =
+* Added Redis queue driver (compatible with redis-cache plugin)
+* Added Memcached queue driver
+* Added auto-detection of best available driver
+* Added WP_QUEUE_DRIVER constant for driver selection
+* Added example plugin link
+
 = 1.0.0 =
 * Initial release
 * Job dispatching with PHP 8 attributes
@@ -144,5 +167,13 @@ Yes, WP Queue works with WordPress multisite installations.
 
 == Upgrade Notice ==
 
+= 1.1.0 =
+New Redis and Memcached drivers for better performance. Set WP_QUEUE_DRIVER to 'auto' for automatic selection.
+
 = 1.0.0 =
 Initial release of WP Queue.
+
+== External Resources ==
+
+* [Example Plugin](https://github.com/rwsite/wp-queue-example-plugin) - Complete working example
+* [Redis Object Cache](https://github.com/rhubarbgroup/redis-cache) - Compatible Redis plugin

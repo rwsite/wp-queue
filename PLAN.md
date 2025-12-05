@@ -5,6 +5,7 @@
 **WP Queue** — легковесный менеджер очередей и фоновых процессов для WordPress с Laravel-like API.
 
 ### Ключевые принципы
+
 - **Минимализм** — никакого раздутого кода как в Action Scheduler
 - **Декларативность** — Jobs описываются атрибутами PHP 8
 - **Автоматизация** — автоматическая регистрация задач, хуков, интервалов
@@ -57,7 +58,8 @@ wp-queue/
 │   │
 │   ├── Queue/
 │   │   ├── DatabaseQueue.php    # wp_options хранилище
-│   │   ├── RedisQueue.php       # Redis (опционально)
+│   │   ├── RedisQueue.php       # Redis (phpredis extension)
+│   │   ├── MemcachedQueue.php   # Memcached (memcached extension)
 │   │   └── SyncQueue.php        # Синхронное выполнение
 │   │
 │   ├── Events/
@@ -224,6 +226,7 @@ WPQueue::logs()->recent(100);
 ### Чек-лист
 
 #### Фаза 1: Core (TDD)
+
 - [x] **1.1** Создать структуру плагина + composer.json + pint.json
 - [x] **1.2** Написать тесты для `JobInterface` и `Job`
 - [x] **1.3** Реализовать базовый `Job` класс
@@ -237,18 +240,21 @@ WPQueue::logs()->recent(100);
 - [x] **1.11** Реализовать `Worker`
 
 #### Фаза 2: Scheduler
+
 - [x] **2.1** Написать тесты для `Scheduler`
 - [x] **2.2** Реализовать `Scheduler`
 - [x] **2.3** Интеграция с WP-Cron
 - [x] **2.4** Автоматическая регистрация задач по атрибутам
 
 #### Фаза 3: Логирование и метрики
+
 - [ ] **3.1** Написать тесты для `LogStorage`
 - [x] **3.2** Реализовать `LogStorage`
 - [x] **3.3** Реализовать `MetricsStorage` (Merged into LogStorage)
 - [x] **3.4** Реализовать Events (хуки)
 
 #### Фаза 4: Admin UI
+
 - [x] **4.1** Создать страницу в админке
 - [x] **4.2** REST API для AJAX операций
 - [x] **4.3** Dashboard view
@@ -257,12 +263,14 @@ WPQueue::logs()->recent(100);
 - [x] **4.6** Ручное управление (pause/resume/cancel)
 
 #### Фаза 5: Документация и финализация
+
 - [x] **5.1** README.md с примерами
 - [x] **5.2** PHPDoc для всех публичных методов
 - [x] **5.3** Интеграционные тесты (E2E)
 - [ ] **5.4** Финальный code review + pint
 
 #### Фаза 6: Cron Monitor & System Status
+
 - [x] **6.1** Написать тесты для `CronMonitor`
 - [x] **6.2** Реализовать `CronMonitor` — просмотр всех WP-Cron задач
 - [x] **6.3** Написать тесты для `SystemStatus`
@@ -273,12 +281,22 @@ WPQueue::logs()->recent(100);
 - [x] **6.8** Обновить документацию
 
 #### Фаза 7: Улучшения и подготовка к публикации
+
 - [x] **7.1** Help Tab в админке (как в Action Scheduler)
 - [x] **7.2** Редактирование/пауза/возобновление cron событий (как в WP Crontrol)
 - [x] **7.3** WP-CLI команды (queue, cron)
 - [x] **7.4** Улучшить README + бейджи + SVG логотип
 - [x] **7.5** Локализация (ru_RU)
 - [x] **7.6** Подготовка к публикации (composer.json, readme.txt, LICENSE)
+
+#### Фаза 8: Расширенные драйверы очередей
+
+- [x] **8.1** Реализовать `RedisQueue` (совместимость с redis-cache плагином)
+- [x] **8.2** Реализовать `MemcachedQueue`
+- [x] **8.3** Добавить автоопределение лучшего драйвера
+- [x] **8.4** Добавить константу `WP_QUEUE_DRIVER`
+- [x] **8.5** Обновить документацию (README.md, readme.txt)
+- [x] **8.6** Добавить ссылку на демо-плагин
 
 ---
 
@@ -373,6 +391,7 @@ wp_queue_metrics                   - Метрики (JSON)
 ## Миграция с текущего кода (woo2iiko)
 
 ### До
+
 ```php
 // CronPlugin.php
 public static function get_tasks(): array {
@@ -393,6 +412,7 @@ private function import_products() {
 ```
 
 ### После
+
 ```php
 use WPQueue\Jobs\Job;
 use WPQueue\Attributes\{Schedule, Queue};
@@ -458,6 +478,8 @@ wp-queue/
 │   │
 │   ├── Queue/
 │   │   ├── DatabaseQueue.php    # wp_options хранилище
+│   │   ├── RedisQueue.php       # Redis (phpredis)
+│   │   ├── MemcachedQueue.php   # Memcached
 │   │   └── SyncQueue.php        # Синхронное выполнение
 │   │
 │   ├── Events/
@@ -496,8 +518,32 @@ wp-queue/
 - **PHP 8.3+** — атрибуты, readonly, типизация
 - **Laravel-like API** — dispatch(), chain(), batch()
 - **Без внешних зависимостей** — только WordPress
-- **wp_options storage** — без своих таблиц БД
+- **Множество драйверов** — Database, Redis, Memcached, Sync
+- **Автоопределение** — автоматический выбор лучшего драйвера
+- **Совместимость с redis-cache** — использует те же настройки
 - **Admin UI** — Dashboard, Jobs, Logs
 - **REST API** — для интеграций
 - **Полное логирование** — метрики, история
 - **TDD** — 46 тестов
+
+### Демо-плагин
+
+Пример использования: **[wp-queue-example-plugin](https://github.com/rwsite/wp-queue-example-plugin)**
+
+### Конфигурация драйверов
+
+```php
+// wp-config.php
+
+// Выбор драйвера: 'database', 'redis', 'memcached', 'sync', 'auto'
+define('WP_QUEUE_DRIVER', 'auto');
+
+// Redis (совместимо с redis-cache плагином)
+define('WP_REDIS_HOST', 'redis');
+define('WP_REDIS_PORT', '6379');
+define('WP_REDIS_PREFIX', 'mysite_');
+
+// Memcached
+define('WP_MEMCACHED_HOST', '127.0.0.1');
+define('WP_MEMCACHED_PORT', 11211);
+```

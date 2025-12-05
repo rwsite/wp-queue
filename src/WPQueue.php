@@ -71,7 +71,7 @@ final class WPQueue
 
         // Register cron handler for processing queues
         add_action('wp_queue_process', static function (string $queue = 'default'): void {
-            error_log('WP Queue: Processing started for queue: ' . $queue);
+            error_log('WP Queue: Processing started for queue: '.$queue);
 
             $instance = self::getInstance();
             $instance->worker->setMaxJobs(50);
@@ -108,7 +108,7 @@ final class WPQueue
                 }
             }
 
-            error_log('WP Queue: Processing completed. Jobs processed: ' . $instance->worker->getJobsProcessed());
+            error_log('WP Queue: Processing completed. Jobs processed: '.$instance->worker->getJobsProcessed());
         });
 
         // Schedule queue processing
@@ -176,7 +176,7 @@ final class WPQueue
         // Удаляем таблицу логов при деактивации
         global $wpdb;
 
-        $table = $wpdb->prefix . 'queue_logs';
+        $table = $wpdb->prefix.'queue_logs';
         $wpdb->query("DROP TABLE IF EXISTS {$table}");
     }
 
@@ -184,7 +184,7 @@ final class WPQueue
     {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'queue_logs';
+        $table = $wpdb->prefix.'queue_logs';
         $charsetCollate = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE {$table} (
@@ -203,7 +203,7 @@ final class WPQueue
         ) {$charsetCollate};";
 
         if (! function_exists('dbDelta')) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            require_once ABSPATH.'wp-admin/includes/upgrade.php';
         }
 
         \dbDelta($sql);
@@ -219,7 +219,7 @@ final class WPQueue
         }
 
         global $wpdb;
-        $table = $wpdb->prefix . 'queue_logs';
+        $table = $wpdb->prefix.'queue_logs';
 
         foreach ($logs as $log) {
             $wpdb->insert(
@@ -241,7 +241,7 @@ final class WPQueue
                     '%s',
                     '%d',
                     '%s',
-                ]
+                ],
             );
         }
 
@@ -329,7 +329,7 @@ final class WPQueue
      */
     public static function isProcessing(string $queue = 'default'): bool
     {
-        return (bool) get_site_transient('wp_queue_lock_' . $queue);
+        return (bool) get_site_transient('wp_queue_lock_'.$queue);
     }
 
     /**
@@ -345,7 +345,7 @@ final class WPQueue
      */
     public static function pause(string $queue = 'default'): void
     {
-        update_site_option('wp_queue_status_' . $queue, 'paused');
+        update_site_option('wp_queue_status_'.$queue, 'paused');
     }
 
     /**
@@ -353,7 +353,7 @@ final class WPQueue
      */
     public static function resume(string $queue = 'default'): void
     {
-        delete_site_option('wp_queue_status_' . $queue);
+        delete_site_option('wp_queue_status_'.$queue);
     }
 
     /**
@@ -361,7 +361,7 @@ final class WPQueue
      */
     public static function isPaused(string $queue = 'default'): bool
     {
-        return get_site_option('wp_queue_status_' . $queue) === 'paused';
+        return get_site_option('wp_queue_status_'.$queue) === 'paused';
     }
 
     /**

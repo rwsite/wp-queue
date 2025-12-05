@@ -31,7 +31,7 @@
 ## Features
 
 - 🚀 **Laravel-style API** — Clean, fluent job dispatching with PHP 8 attributes
-- 📦 **Multiple Drivers** — Database, Sync, extensible for Redis
+- 📦 **Multiple Drivers** — Database, Redis, Memcached, Sync (auto-detection)
 - 🔄 **Auto Retries** — Exponential backoff for failed jobs
 - ⏰ **Scheduling** — Cron-like job scheduling
 - 👁️ **WP-Cron Monitor** — View, run, pause, resume, edit cron events
@@ -234,8 +234,6 @@ WPQueue::logs()->clearOld(7);  // Clear logs older than 7 days
 
 Access via **WP Admin → WP Queue**
 
-
-
 ### Tabs
 
 | Tab | Description |
@@ -249,6 +247,7 @@ Access via **WP Admin → WP Queue**
 ### WP-Cron Monitor
 
 View and manage all WordPress cron events:
+
 - Filter by source (WordPress, WooCommerce, Plugins, WP Queue)
 - See overdue events
 - Run events manually
@@ -258,6 +257,7 @@ View and manage all WordPress cron events:
 ### System Status
 
 Health check and environment info:
+
 - PHP/WordPress versions
 - Memory limit and usage
 - WP-Cron status (disabled/alternate)
@@ -284,22 +284,70 @@ POST   /wp-json/wp-queue/v1/cron/delete
 GET    /wp-json/wp-queue/v1/system
 ```
 
-## Custom Queue Drivers
+## Queue Drivers
+
+WP Queue supports multiple storage backends:
+
+| Driver | Description | Requirements |
+|--------|-------------|-------------|
+| `database` | Uses wp_options table (default) | None |
+| `redis` | Redis server | phpredis extension |
+| `memcached` | Memcached server | memcached extension |
+| `sync` | Synchronous execution | None |
+| `auto` | Auto-detect best available | None |
+
+### Configuration
+
+Add to `wp-config.php`:
+
+```php
+// Select queue driver
+define('WP_QUEUE_DRIVER', 'redis'); // or 'memcached', 'database', 'sync', 'auto'
+
+// Redis settings (compatible with redis-cache plugin)
+define('WP_REDIS_HOST', 'redis');      // or '127.0.0.1'
+define('WP_REDIS_PORT', '6379');
+define('WP_REDIS_PREFIX', 'mysite_');  // optional
+define('WP_REDIS_PASSWORD', 'secret'); // optional
+define('WP_REDIS_DATABASE', 0);        // optional, 0-15
+
+// Memcached settings
+define('WP_MEMCACHED_HOST', '127.0.0.1');
+define('WP_MEMCACHED_PORT', 11211);
+```
+
+### Programmatic Configuration
 
 ```php
 use WPQueue\WPQueue;
 use WPQueue\Contracts\QueueInterface;
 
-// Register custom driver
-WPQueue::manager()->extend('redis', function() {
-    return new RedisQueue([
-        'host' => '127.0.0.1',
-        'port' => 6379,
-    ]);
-});
-
-// Use custom driver
+// Set driver programmatically
 WPQueue::manager()->setDefaultDriver('redis');
+
+// Check available drivers
+$drivers = WPQueue::manager()->getAvailableDrivers();
+// ['database' => ['available' => true, 'info' => '...'], ...]
+
+// Check if specific driver is available
+if (WPQueue::manager()->isDriverAvailable('redis')) {
+    WPQueue::manager()->setDefaultDriver('redis');
+}
+
+// Register custom driver
+WPQueue::manager()->extend('sqs', function() {
+    return new SqsQueue(['region' => 'us-east-1']);
+});
+```
+
+### Redis with redis-cache Plugin
+
+If you use [Redis Object Cache](https://github.com/rhubarbgroup/redis-cache) plugin, WP Queue will automatically use the same Redis connection settings. No additional configuration needed!
+
+```php
+// These constants from redis-cache are automatically used:
+// WP_REDIS_HOST, WP_REDIS_PORT, WP_REDIS_PASSWORD, WP_REDIS_DATABASE
+// WP_REDIS_PREFIX, WP_REDIS_SCHEME, WP_REDIS_PATH, WP_REDIS_TIMEOUT
 ```
 
 ## Migration from Action Scheduler
@@ -362,6 +410,18 @@ composer lint
 ```
 
 Подробнее: [tests/README.md](tests/README.md)
+
+## Example Plugin
+
+See a complete working example: **[wp-queue-example-plugin](https://github.com/rwsite/wp-queue-example-plugin)**
+
+The example demonstrates:
+
+- Creating custom jobs
+- Using PHP 8 attributes
+- Scheduling jobs
+- Handling failures
+- Chain and batch processing
 
 ## License
 

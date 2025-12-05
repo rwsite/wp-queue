@@ -15,6 +15,7 @@ beforeEach(function (): void {
         'is_wp_error' => fn ($thing) => false,
         'get_option' => fn ($key, $default = false) => $default,
         'size_format' => fn ($bytes) => round($bytes / 1024 / 1024, 2).' MB',
+        'wp_date' => fn (string $format) => date($format),
     ]);
 });
 

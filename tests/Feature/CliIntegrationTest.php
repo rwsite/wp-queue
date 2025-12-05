@@ -258,19 +258,15 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->getRecent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
 
 test('CLI команда queue:retry повторяет проваленную задачу', function (): void {
-    $attempts = 0;
-
-    $job = new class($attempts) extends Job
+    $job = new class() extends Job
     {
-        protected int &$attempts;
-
-        public function __construct(private int &$attempts)
+        public function __construct()
         {
             parent::__construct();
             $this->maxAttempts = 1;
@@ -278,10 +274,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
         public function handle(): void
         {
-            $this->attempts++;
-            if ($this->attempts === 1) {
-                throw new \Exception('First attempt fails');
-            }
+            throw new \Exception('First attempt fails');
         }
     };
 
@@ -290,13 +283,21 @@ test('CLI команда queue:retry повторяет проваленную �
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    expect($attempts)->toBe(1);
+    // Проверяем что задача провалилась
+    $logs = WPQueue::logs()->getRecent(10);
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+
+    expect($failed)->not->toBeEmpty();
 
     // Повторная отправка задачи
     WPQueue::dispatch($job);
     $worker->runNextJob('default');
 
-    expect($attempts)->toBe(2);
+    // Проверяем что теперь 2 проваленные задачи
+    $logs = WPQueue::logs()->getRecent(10);
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+
+    expect(count($failed))->toBe(2);
 });
 
 test('CLI команда queue:flush очищает все очереди', function (): void {

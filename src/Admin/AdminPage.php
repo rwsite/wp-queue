@@ -6,24 +6,76 @@ namespace WPQueue\Admin;
 
 use WPQueue\WPQueue;
 
+/**
+ * Admin Page with Rank Math style UI
+ * 4 main tabs: Queues, Scheduler, Diagnostics, Documentation
+ * Each tab has sidebar submenu
+ */
 class AdminPage
 {
+    /** @var array<string, array<string, string>> */
+    private array $tabs = [];
+
+    /** @var array<string, array<string, array{title: string, icon: string}>> */
+    private array $sections = [];
+
     public function __construct()
     {
+        $this->initTabs();
         add_action('admin_menu', [$this, 'addMenuPage']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
-        add_action('load-tools_page_wp-queue', [$this, 'addHelpTabs']);
+    }
+
+    private function initTabs(): void
+    {
+        $this->tabs = [
+            'queues' => ['title' => __('Очереди', 'wp-queue'), 'icon' => 'dashicons-database'],
+            'scheduler' => ['title' => __('Планировщик заданий', 'wp-queue'), 'icon' => 'dashicons-clock'],
+            'diagnostics' => ['title' => __('Диагностика', 'wp-queue'), 'icon' => 'dashicons-heart'],
+            'docs' => ['title' => __('Документация', 'wp-queue'), 'icon' => 'dashicons-book'],
+        ];
+
+        $this->sections = [
+            'queues' => [
+                'overview' => ['title' => __('Обзор', 'wp-queue'), 'icon' => '📊'],
+                'jobs' => ['title' => __('Задачи', 'wp-queue'), 'icon' => '📋'],
+                'history' => ['title' => __('История', 'wp-queue'), 'icon' => '📜'],
+                'drivers' => ['title' => __('Драйверы', 'wp-queue'), 'icon' => '⚙️'],
+                'settings' => ['title' => __('Настройки', 'wp-queue'), 'icon' => '🔄'],
+            ],
+            'scheduler' => [
+                'overview' => ['title' => __('Обзор', 'wp-queue'), 'icon' => '📊'],
+                'events' => ['title' => __('События', 'wp-queue'), 'icon' => '📅'],
+                'paused' => ['title' => __('Приостановленные', 'wp-queue'), 'icon' => '⏸️'],
+                'schedules' => ['title' => __('Расписания', 'wp-queue'), 'icon' => '🕐'],
+                'settings' => ['title' => __('Настройки', 'wp-queue'), 'icon' => '⚙️'],
+            ],
+            'diagnostics' => [
+                'health' => ['title' => __('Здоровье', 'wp-queue'), 'icon' => '🏥'],
+                'environment' => ['title' => __('Окружение', 'wp-queue'), 'icon' => '💻'],
+                'logs' => ['title' => __('Логи', 'wp-queue'), 'icon' => '📝'],
+                'tools' => ['title' => __('Инструменты', 'wp-queue'), 'icon' => '🔧'],
+            ],
+            'docs' => [
+                'intro' => ['title' => __('Введение', 'wp-queue'), 'icon' => '📖'],
+                'quickstart' => ['title' => __('Быстрый старт', 'wp-queue'), 'icon' => '🚀'],
+                'api' => ['title' => __('API', 'wp-queue'), 'icon' => '💻'],
+                'cli' => ['title' => __('CLI', 'wp-queue'), 'icon' => '🔧'],
+                'faq' => ['title' => __('FAQ', 'wp-queue'), 'icon' => '❓'],
+            ],
+        ];
     }
 
     public function addMenuPage(): void
     {
-        add_submenu_page(
-            'tools.php',
+        add_menu_page(
             __('WP Queue', 'wp-queue'),
             __('WP Queue', 'wp-queue'),
             'manage_options',
             'wp-queue',
             [$this, 'renderPage'],
+            'dashicons-database',
+            80,
         );
     }
 
@@ -124,7 +176,7 @@ wp queue system              # Show system status</code></pre>';
 
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'tools_page_wp-queue') {
+        if ($hook !== 'toplevel_page_wp-queue') {
             return;
         }
 
@@ -154,75 +206,119 @@ wp queue system              # Show system status</code></pre>';
                 'error' => __('An error occurred', 'wp-queue'),
             ],
         ]);
-
-        // Добавляем inline script для подсветки активного пункта меню
-        wp_add_inline_script('wp-queue-admin', "
-            jQuery(document).ready(function($) {
-                // Подсвечиваем пункт меню WP Queue как активный
-                var currentUrl = window.location.href;
-                var wpQueueMenuItem = $('a[href*=\"page=wp-queue\"]');
-                
-                if (currentUrl.includes('page=wp-queue')) {
-                    // Удаляем класс current у всех пунктов подменю Инструменты
-                    $('#menu-tools ul.wp-submenu li').removeClass('current');
-                    
-                    // Добавляем класс current к пункту WP Queue
-                    wpQueueMenuItem.parent().addClass('current');
-                    
-                    // Также подсвечиваем родительский пункт меню
-                    $('#menu-tools').addClass('wp-has-current-submenu wp-menu-open');
-                    $('#menu-tools > a').addClass('wp-has-current-submenu');
-                }
-            });
-        ");
     }
 
     public function renderPage(): void
     {
-        $tab = sanitize_key($_GET['tab'] ?? 'dashboard');
+        $tab = sanitize_key($_GET['tab'] ?? 'queues');
+        $section = sanitize_key($_GET['section'] ?? 'overview');
+
+        if (! isset($this->tabs[$tab])) {
+            $tab = 'queues';
+        }
+        if (! isset($this->sections[$tab][$section])) {
+            $section = array_key_first($this->sections[$tab]);
+        }
 
         ?>
-        <div class="wrap wp-queue-admin">
-            <h1><?php echo esc_html__('WP Queue Dashboard', 'wp-queue'); ?></h1>
+        <div class="wrap wp-queue-wrap">
+            <?php $this->renderHeader($tab, $section); ?>
+            <?php $this->renderTabs($tab); ?>
 
-            <nav class="nav-tab-wrapper">
-                <a href="?page=wp-queue&tab=dashboard" class="nav-tab <?php echo $tab === 'dashboard' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('Dashboard', 'wp-queue'); ?>
-                </a>
-                <a href="?page=wp-queue&tab=jobs" class="nav-tab <?php echo $tab === 'jobs' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('Scheduled Jobs', 'wp-queue'); ?>
-                </a>
-                <a href="?page=wp-queue&tab=logs" class="nav-tab <?php echo $tab === 'logs' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('Logs', 'wp-queue'); ?>
-                </a>
-                <a href="?page=wp-queue&tab=cron" class="nav-tab <?php echo $tab === 'cron' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('WP-Cron', 'wp-queue'); ?>
-                </a>
-                <a href="?page=wp-queue&tab=system" class="nav-tab <?php echo $tab === 'system' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('System', 'wp-queue'); ?>
-                </a>
-                <a href="?page=wp-queue&tab=help" class="nav-tab <?php echo $tab === 'help' ? 'nav-tab-active' : ''; ?>">
-                    <?php echo esc_html__('Help', 'wp-queue'); ?>
-                </a>
-            </nav>
-
-            <div class="wp-queue-content">
-                <?php
-                        match ($tab) {
-                            'jobs' => $this->renderJobsTab(),
-                            'logs' => $this->renderLogsTab(),
-                            'cron' => $this->renderCronTab(),
-                            'system' => $this->renderSystemTab(),
-                            'help' => $this->renderHelpTab(),
-                            default => $this->renderDashboardTab(),
-                        };
-        ?>
+            <div class="wp-queue-container">
+                <?php $this->renderSidebar($tab, $section); ?>
+                <div class="wp-queue-main">
+                    <?php $this->renderSectionContent($tab, $section); ?>
+                </div>
             </div>
         </div>
     <?php
     }
 
-    protected function renderDashboardTab(): void
+    private function renderHeader(string $tab, string $section): void
+    {
+        $tabTitle = $this->tabs[$tab]['title'] ?? '';
+        $sectionTitle = $this->sections[$tab][$section]['title'] ?? '';
+        ?>
+        <div class="wp-queue-header">
+            <div class="wp-queue-header-left">
+                <span class="dashicons dashicons-database wp-queue-logo-icon"></span>
+                <span class="wp-queue-title">WP Queue</span>
+                <span class="wp-queue-breadcrumb">
+                    / <?php echo esc_html($tabTitle); ?> / <?php echo esc_html($sectionTitle); ?>
+                </span>
+            </div>
+            <div class="wp-queue-header-right">
+                <span class="wp-queue-version">v<?php echo esc_html(WP_QUEUE_VERSION); ?></span>
+            </div>
+        </div>
+    <?php
+    }
+
+    private function renderTabs(string $currentTab): void
+    {
+        ?>
+        <nav class="wp-queue-tabs">
+            <?php foreach ($this->tabs as $tabKey => $tabData) { ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab='.$tabKey)); ?>"
+                    class="wp-queue-tab <?php echo $currentTab === $tabKey ? 'active' : ''; ?>">
+                    <span class="dashicons <?php echo esc_attr($tabData['icon']); ?>"></span>
+                    <?php echo esc_html($tabData['title']); ?>
+                </a>
+            <?php } ?>
+        </nav>
+    <?php
+    }
+
+    private function renderSidebar(string $tab, string $currentSection): void
+    {
+        ?>
+        <div class="wp-queue-sidebar">
+            <?php foreach ($this->sections[$tab] as $sectionKey => $sectionData) { ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab='.$tab.'&section='.$sectionKey)); ?>"
+                    class="wp-queue-sidebar-item <?php echo $currentSection === $sectionKey ? 'active' : ''; ?>">
+                    <span class="sidebar-icon"><?php echo esc_html($sectionData['icon']); ?></span>
+                    <?php echo esc_html($sectionData['title']); ?>
+                </a>
+            <?php } ?>
+        </div>
+    <?php
+    }
+
+    private function renderSectionContent(string $tab, string $section): void
+    {
+        $method = 'render'.ucfirst($tab).ucfirst($section);
+        if (method_exists($this, $method)) {
+            $this->$method();
+        } else {
+            $this->renderPlaceholder($tab, $section);
+        }
+    }
+
+    private function renderPlaceholder(string $tab, string $section): void
+    {
+        ?>
+        <div class="wp-queue-section-header">
+            <h1><?php echo esc_html($this->sections[$tab][$section]['title']); ?></h1>
+            <p class="description"><?php echo esc_html__('Этот раздел находится в разработке.', 'wp-queue'); ?></p>
+        </div>
+    <?php
+    }
+
+    private function getStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'idle' => __('Простаивает', 'wp-queue'),
+            'pending' => __('Ожидает', 'wp-queue'),
+            'running' => __('Работает', 'wp-queue'),
+            'paused' => __('Пауза', 'wp-queue'),
+            'completed' => __('Завершено', 'wp-queue'),
+            'failed' => __('Ошибка', 'wp-queue'),
+            default => ucfirst($status),
+        };
+    }
+
+    protected function renderQueuesOverview(): void
     {
         $metrics = WPQueue::logs()->metrics();
         $queues = $this->getQueuesStatus();
@@ -299,7 +395,7 @@ wp queue system              # Show system status</code></pre>';
     <?php
     }
 
-    protected function renderJobsTab(): void
+    protected function renderQueuesJobs(): void
     {
         $scheduler = WPQueue::scheduler();
         $jobs = $scheduler->getJobs();
@@ -359,7 +455,7 @@ wp queue system              # Show system status</code></pre>';
     <?php
     }
 
-    protected function renderHelpTab(): void
+    protected function renderDocsIntro(): void
     {
         ?>
         <div class="wp-queue-help">
@@ -532,7 +628,7 @@ wp queue system              # Show system status</code></pre>';
     <?php
     }
 
-    protected function renderLogsTab(): void
+    protected function renderQueuesHistory(): void
     {
         $filter = sanitize_key($_GET['filter'] ?? 'all');
         $logs = match ($filter) {
@@ -551,13 +647,13 @@ wp queue system              # Show system status</code></pre>';
             </p>
             <div class="tablenav top">
                 <div class="alignleft actions">
-                    <a href="?page=wp-queue&tab=logs&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=queues&section=history&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('All', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=logs&filter=completed" class="button <?php echo $filter === 'completed' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=queues&section=history&filter=completed" class="button <?php echo $filter === 'completed' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('Completed', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=logs&filter=failed" class="button <?php echo $filter === 'failed' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=queues&section=history&filter=failed" class="button <?php echo $filter === 'failed' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('Failed', 'wp-queue'); ?>
                     </a>
                 </div>
@@ -705,7 +801,7 @@ wp queue system              # Show system status</code></pre>';
         return $count;
     }
 
-    protected function renderCronTab(): void
+    protected function renderSchedulerEvents(): void
     {
         $monitor = new CronMonitor();
         $filter = sanitize_key($_GET['filter'] ?? 'all');
@@ -747,19 +843,19 @@ wp queue system              # Show system status</code></pre>';
 
             <div class="tablenav top">
                 <div class="alignleft actions">
-                    <a href="?page=wp-queue&tab=cron&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=scheduler&section=events&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('All', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=cron&filter=wordpress" class="button <?php echo $filter === 'wordpress' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=scheduler&section=events&filter=wordpress" class="button <?php echo $filter === 'wordpress' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('WordPress', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=cron&filter=woocommerce" class="button <?php echo $filter === 'woocommerce' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=scheduler&section=events&filter=woocommerce" class="button <?php echo $filter === 'woocommerce' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('WooCommerce', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=cron&filter=wp-queue" class="button <?php echo $filter === 'wp-queue' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=scheduler&section=events&filter=wp-queue" class="button <?php echo $filter === 'wp-queue' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('WP Queue', 'wp-queue'); ?>
                     </a>
-                    <a href="?page=wp-queue&tab=cron&filter=plugin" class="button <?php echo $filter === 'plugin' ? 'button-primary' : ''; ?>">
+                    <a href="?page=wp-queue&tab=scheduler&section=events&filter=plugin" class="button <?php echo $filter === 'plugin' ? 'button-primary' : ''; ?>">
                         <?php echo esc_html__('Plugins', 'wp-queue'); ?>
                     </a>
                 </div>
@@ -921,7 +1017,7 @@ wp queue system              # Show system status</code></pre>';
     <?php
     }
 
-    protected function renderSystemTab(): void
+    protected function renderDiagnosticsEnvironment(): void
     {
         $status = new SystemStatus();
         $report = $status->getFullReport();

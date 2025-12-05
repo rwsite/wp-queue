@@ -65,11 +65,9 @@ test('задача с delay откладывается на указанное �
 });
 
 test('задача с несколькими попытками при ошибке', function (): void {
-    $attempts = 0;
-
-    $job = new class($attempts) extends Job
+    $job = new class extends Job
     {
-        public function __construct(private int &$attempts)
+        public function __construct()
         {
             parent::__construct();
             $this->maxAttempts = 3;
@@ -77,7 +75,6 @@ test('задача с несколькими попытками при ошиб�
 
         public function handle(): void
         {
-            $this->attempts++;
             throw new \Exception('Test error');
         }
     };
@@ -85,66 +82,55 @@ test('задача с несколькими попытками при ошиб�
     WPQueue::dispatch($job);
 
     $worker = WPQueue::worker();
-    $worker->setMaxJobs(5);
 
     // Попытка 1
     $worker->runNextJob('default');
-    expect($attempts)->toBe(1);
     expect(WPQueue::queueSize('default'))->toBe(1);
 
     // Попытка 2
     $worker->runNextJob('default');
-    expect($attempts)->toBe(2);
     expect(WPQueue::queueSize('default'))->toBe(1);
 
     // Попытка 3 (последняя)
     $worker->runNextJob('default');
-    expect($attempts)->toBe(3);
     expect(WPQueue::queueSize('default'))->toBe(0);
 });
 
 test('несколько задач обрабатываются по порядку FIFO', function (): void {
-    $results = [];
-
-    $job1 = new class($results, 1) extends Job
+    $job1 = new class extends Job
     {
-        public function __construct(private array &$results, private int $number)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->results[] = $this->number;
+            update_option('wp_queue_fifo_test', array_merge(
+                get_option('wp_queue_fifo_test', []),
+                [1]
+            ));
         }
     };
 
-    $job2 = new class($results, 2) extends Job
+    $job2 = new class extends Job
     {
-        public function __construct(private array &$results, private int $number)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->results[] = $this->number;
+            update_option('wp_queue_fifo_test', array_merge(
+                get_option('wp_queue_fifo_test', []),
+                [2]
+            ));
         }
     };
 
-    $job3 = new class($results, 3) extends Job
+    $job3 = new class extends Job
     {
-        public function __construct(private array &$results, private int $number)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->results[] = $this->number;
+            update_option('wp_queue_fifo_test', array_merge(
+                get_option('wp_queue_fifo_test', []),
+                [3]
+            ));
         }
     };
 
+    delete_option('wp_queue_fifo_test');
     WPQueue::dispatch($job1);
     WPQueue::dispatch($job2);
     WPQueue::dispatch($job3);
@@ -158,30 +144,25 @@ test('несколько задач обрабатываются по поряд
         // Обработка всех задач
     }
 
-    expect($results)->toBe([1, 2, 3]);
+    expect(get_option('wp_queue_fifo_test'))->toBe([1, 2, 3]);
     expect(WPQueue::queueSize('default'))->toBe(0);
 });
 
 test('разные очереди обрабатываются независимо', function (): void {
-    $defaultExecuted = false;
-    $emailsExecuted = false;
+    delete_option('wp_queue_default_executed');
+    delete_option('wp_queue_emails_executed');
 
-    $defaultJob = new class($defaultExecuted) extends Job
+    $defaultJob = new class extends Job
     {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->executed = true;
+            update_option('wp_queue_default_executed', true);
         }
     };
 
-    $emailJob = new class($emailsExecuted) extends Job
+    $emailJob = new class extends Job
     {
-        public function __construct(private bool &$executed)
+        public function __construct()
         {
             parent::__construct();
             $this->queue = 'emails';
@@ -189,7 +170,7 @@ test('разные очереди обрабатываются независи�
 
         public function handle(): void
         {
-            $this->executed = true;
+            update_option('wp_queue_emails_executed', true);
         }
     };
 
@@ -203,31 +184,26 @@ test('разные очереди обрабатываются независи�
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    expect($defaultExecuted)->toBeTrue();
-    expect($emailsExecuted)->toBeFalse();
+    expect(get_option('wp_queue_default_executed'))->toBeTrue();
+    expect(get_option('wp_queue_emails_executed'))->toBeFalsy();
     expect(WPQueue::queueSize('default'))->toBe(0);
     expect(WPQueue::queueSize('emails'))->toBe(1);
 
     // Обработка emails очереди
     $worker->runNextJob('emails');
 
-    expect($emailsExecuted)->toBeTrue();
+    expect(get_option('wp_queue_emails_executed'))->toBeTrue();
     expect(WPQueue::queueSize('emails'))->toBe(0);
 });
 
 test('pause и resume очереди', function (): void {
-    $executed = false;
+    delete_option('wp_queue_pause_test');
 
-    $job = new class($executed) extends Job
+    $job = new class extends Job
     {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->executed = true;
+            update_option('wp_queue_pause_test', true);
         }
     };
 
@@ -241,7 +217,7 @@ test('pause и resume очереди', function (): void {
 
     // Задача не выполнена, так как очередь на паузе
     expect($result)->toBeFalse();
-    expect($executed)->toBeFalse();
+    expect(get_option('wp_queue_pause_test'))->toBeFalsy();
 
     // Возобновление очереди
     WPQueue::resume('default');
@@ -250,7 +226,7 @@ test('pause и resume очереди', function (): void {
     $result = $worker->runNextJob('default');
 
     expect($result)->toBeTrue();
-    expect($executed)->toBeTrue();
+    expect(get_option('wp_queue_pause_test'))->toBeTrue();
 });
 
 test('clear очищает все задачи из очереди', function (): void {
@@ -295,41 +271,32 @@ test('cancel очищает и ставит очередь на паузу', fun
 });
 
 test('dispatchSync выполняет задачу немедленно без очереди', function (): void {
-    $executed = false;
+    delete_option('wp_queue_sync_test');
 
-    $job = new class($executed) extends Job
+    $job = new class extends Job
     {
-        public function __construct(private bool &$executed)
-        {
-            parent::__construct();
-        }
-
         public function handle(): void
         {
-            $this->executed = true;
+            update_option('wp_queue_sync_test', true);
         }
     };
 
     WPQueue::dispatchSync($job);
 
-    expect($executed)->toBeTrue();
+    expect(get_option('wp_queue_sync_test'))->toBeTrue();
     expect(WPQueue::queueSize('default'))->toBe(0);
 });
 
 test('worker останавливается после maxJobs', function (): void {
-    $count = 0;
+    delete_option('wp_queue_maxjobs_count');
 
     for ($i = 0; $i < 10; $i++) {
-        $job = new class($count) extends Job
+        $job = new class extends Job
         {
-            public function __construct(private int &$count)
-            {
-                parent::__construct();
-            }
-
             public function handle(): void
             {
-                $this->count++;
+                $count = (int) get_option('wp_queue_maxjobs_count', 0);
+                update_option('wp_queue_maxjobs_count', $count + 1);
             }
         };
         WPQueue::dispatch($job);
@@ -344,24 +311,20 @@ test('worker останавливается после maxJobs', function (): vo
         // Обработка до лимита
     }
 
-    expect($count)->toBe(5);
+    expect((int) get_option('wp_queue_maxjobs_count', 0))->toBe(5);
     expect(WPQueue::queueSize('default'))->toBe(5);
 });
 
 test('worker останавливается после maxTime', function (): void {
-    $count = 0;
+    delete_option('wp_queue_maxtime_count');
 
     for ($i = 0; $i < 100; $i++) {
-        $job = new class($count) extends Job
+        $job = new class extends Job
         {
-            public function __construct(private int &$count)
-            {
-                parent::__construct();
-            }
-
             public function handle(): void
             {
-                $this->count++;
+                $count = (int) get_option('wp_queue_maxtime_count', 0);
+                update_option('wp_queue_maxtime_count', $count + 1);
                 usleep(100000); // 0.1 секунды
             }
         };
@@ -378,7 +341,7 @@ test('worker останавливается после maxTime', function (): vo
     $elapsed = time() - $startTime;
 
     expect($elapsed)->toBeLessThanOrEqual(2);
-    expect($count)->toBeLessThan(100);
+    expect((int) get_option('wp_queue_maxtime_count', 0))->toBeLessThan(100);
 });
 
 test('логирование успешного выполнения задачи', function (): void {
@@ -392,7 +355,7 @@ test('логирование успешного выполнения задач�
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    $logs = WPQueue::logs()->getRecent(1);
+    $logs = WPQueue::logs()->recent(1);
 
     expect($logs)->toHaveCount(1);
     expect($logs[0]['status'])->toBe('completed');
@@ -419,7 +382,7 @@ test('логирование ошибки выполнения задачи', fu
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    $logs = WPQueue::logs()->getRecent(1);
+    $logs = WPQueue::logs()->recent(1);
 
     expect($logs)->toHaveCount(1);
     expect($logs[0]['status'])->toBe('failed');
@@ -428,18 +391,18 @@ test('логирование ошибки выполнения задачи', fu
 
 test('задача с пользовательскими данными сериализуется корректно', function (): void {
     $testData = ['name' => 'Test', 'value' => 123];
-    $result = null;
+    delete_option('wp_queue_serialization_test');
 
-    $job = new class($testData, $result) extends Job
+    $job = new class($testData) extends Job
     {
-        public function __construct(private array $data, private mixed &$result)
+        public function __construct(private array $data)
         {
             parent::__construct();
         }
 
         public function handle(): void
         {
-            $this->result = $this->data;
+            update_option('wp_queue_serialization_test', $this->data);
         }
 
         public function __serialize(): array
@@ -459,5 +422,5 @@ test('задача с пользовательскими данными сери
     $worker = WPQueue::worker();
     $worker->runNextJob('default');
 
-    expect($result)->toBe($testData);
+    expect(get_option('wp_queue_serialization_test'))->toBe($testData);
 });

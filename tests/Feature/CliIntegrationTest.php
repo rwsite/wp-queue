@@ -92,19 +92,15 @@ test('CLI команда queue:work с параметром --queue обраба
 });
 
 test('CLI команда queue:work с параметром --max-jobs ограничивает количество задач', function (): void {
-    $count = 0;
+    delete_option('wp_queue_cli_maxjobs_count');
 
     for ($i = 0; $i < 10; $i++) {
-        $job = new class($count) extends Job
+        $job = new class extends Job
         {
-            public function __construct(private int &$count)
-            {
-                parent::__construct();
-            }
-
             public function handle(): void
             {
-                $this->count++;
+                $count = (int) get_option('wp_queue_cli_maxjobs_count', 0);
+                update_option('wp_queue_cli_maxjobs_count', $count + 1);
             }
         };
         WPQueue::dispatch($job);
@@ -117,24 +113,20 @@ test('CLI команда queue:work с параметром --max-jobs огра�
         // Обработка до лимита
     }
 
-    expect($count)->toBe(5);
+    expect((int) get_option('wp_queue_cli_maxjobs_count', 0))->toBe(5);
     expect(WPQueue::queueSize('default'))->toBe(5);
 });
 
 test('CLI команда queue:work с параметром --max-time ограничивает время выполнения', function (): void {
-    $count = 0;
+    delete_option('wp_queue_cli_maxtime_count');
 
     for ($i = 0; $i < 100; $i++) {
-        $job = new class($count) extends Job
+        $job = new class extends Job
         {
-            public function __construct(private int &$count)
-            {
-                parent::__construct();
-            }
-
             public function handle(): void
             {
-                $this->count++;
+                $count = (int) get_option('wp_queue_cli_maxtime_count', 0);
+                update_option('wp_queue_cli_maxtime_count', $count + 1);
                 usleep(50000); // 0.05 секунды
             }
         };
@@ -151,7 +143,7 @@ test('CLI команда queue:work с параметром --max-time огра�
     $elapsed = time() - $startTime;
 
     expect($elapsed)->toBeLessThanOrEqual(2);
-    expect($count)->toBeLessThan(100);
+    expect((int) get_option('wp_queue_cli_maxtime_count', 0))->toBeLessThan(100);
 });
 
 test('CLI команда queue:list показывает список очередей', function (): void {

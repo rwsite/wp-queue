@@ -11,9 +11,7 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-        </testsuite>
+        <!-- Feature tests require real WordPress environment, run with: composer test:e2e -->
     </testsuites>
     <source>
         <include>

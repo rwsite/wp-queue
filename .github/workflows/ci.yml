@@ -43,8 +43,8 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-all --no-check-lock
 
-      - name: Run Pest tests
-        run: ./vendor/bin/pest
+      - name: Run Unit tests
+        run: ./vendor/bin/pest tests/Unit
 
   lint:
     name: Fix Code Style

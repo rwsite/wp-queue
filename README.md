@@ -141,6 +141,9 @@ add_action('wp_queue_schedule', function ($scheduler) {
     // From settings
     $scheduler->job(BackupJob::class)
         ->interval(get_option('backup_interval', 'daily'));
+
+    // One-time execution (at specific timestamp)
+    $scheduler->job(OneTimeJob::class)->at(time() + 3600);
 });
 ```
 

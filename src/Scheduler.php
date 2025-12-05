@@ -149,9 +149,32 @@ class Scheduler
         $this->scheduleEvent($hook, $interval);
     }
 
+    /**
+     * Schedule an event in WP-Cron.
+     * Handles both recurring events (hourly, daily, etc.) and one-time events (prefixed with 'once_').
+     */
     protected function scheduleEvent(string $hook, string $interval): void
     {
         $existing = wp_get_scheduled_event($hook);
+
+        // Handle one-time events
+        if (str_starts_with($interval, 'once_')) {
+            $timestamp = (int) substr($interval, 5);
+
+            if ($existing !== false) {
+                // If exists but different timestamp or is recurring
+                if ($existing->timestamp !== $timestamp || $existing->schedule) {
+                    wp_clear_scheduled_hook($hook);
+                    $existing = false;
+                }
+            }
+
+            if ($existing === false) {
+                wp_schedule_single_event($timestamp, $hook);
+            }
+
+            return;
+        }
 
         // If exists but different interval, reschedule
         if ($existing !== false && $existing->schedule !== $interval) {
@@ -178,7 +201,7 @@ class Scheduler
         // Извлекаем короткое имя класса без ReflectionClass
         $name = substr(strrchr($jobClass, '\\') ?: $jobClass, 1) ?: $jobClass;
 
-        return 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+        return 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
     }
 
     /**

@@ -51,6 +51,11 @@ class Worker
      */
     public function runNextJob(string $queue = 'default'): bool
     {
+        // Check if queue is paused
+        if (WPQueue::isPaused($queue)) {
+            return false;
+        }
+
         // Check if we should stop before processing
         if ($this->shouldStop()) {
             return false;

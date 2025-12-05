@@ -260,6 +260,7 @@ class Scheduler
             '6hourly' => ['interval' => 6 * HOUR_IN_SECONDS, 'display' => 'Every 6 Hours'],
             '8hourly' => ['interval' => 8 * HOUR_IN_SECONDS, 'display' => 'Every 8 Hours'],
             '12hourly' => ['interval' => 12 * HOUR_IN_SECONDS, 'display' => 'Every 12 Hours'],
+            'monthly' => ['interval' => 30 * DAY_IN_SECONDS, 'display' => 'Monthly'],
         ];
     }
 }

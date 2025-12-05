@@ -258,13 +258,13 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
 
 test('CLI команда queue:retry повторяет проваленную задачу', function (): void {
-    $job = new class() extends Job
+    $job = new class extends Job
     {
         public function __construct()
         {
@@ -285,7 +285,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что задача провалилась
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 
@@ -295,7 +295,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что теперь 2 проваленные задачи
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
 
     expect(count($failed))->toBe(2);
 });
@@ -339,7 +339,7 @@ test('CLI команда cron:list показывает запланирован
     $scheduler->job($job)->hourly();
     $scheduler->register();
 
-    $hook = 'wp_queue_' . strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', substr(strrchr(get_class($job), '\\') ?: get_class($job), 1) ?: get_class($job)));
+    $hook = 'wp_queue_'.strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', substr(strrchr(get_class($job), '\\') ?: get_class($job), 1) ?: get_class($job)));
     $scheduled = wp_get_scheduled_event($hook);
 
     expect($scheduled)->not->toBeFalse();

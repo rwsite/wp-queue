@@ -22,8 +22,9 @@
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#admin-ui">Admin UI</a> •
-  <a href="#wp-cli">WP-CLI</a> •
-  <a href="#rest-api">REST API</a>
+  <a href="#rest-api">REST API</a> •
+  <a href="#testing">Testing</a> •
+  <a href="README.ru.md">🇷🇺 Русский</a>
 </p>
 
 ---
@@ -392,48 +393,61 @@ add_action('wp_queue_schedule', fn($s) => $s->job(MyHourlyTask::class));
 
 ## Testing
 
-WP Queue использует CI-first подход к тестированию.
+WP Queue uses a CI-first testing approach with comprehensive test coverage.
 
-### Unit Tests (локально)
+### Unit Tests (Local)
 
-Быстрые изолированные тесты без WordPress окружения:
+Fast isolated tests without WordPress environment:
 
 ```bash
 composer test:unit
 ```
 
+**Results:** 69 tests, 130 assertions ✅
+
 ### E2E Tests (GitHub Actions)
 
-Интеграционные тесты с реальным WordPress запускаются автоматически в CI:
+Integration tests with real WordPress run automatically in CI:
 
 - ✅ WordPress latest (6.7+) + PHP 8.3
 - ✅ WordPress 6.7 + PHP 8.3
 
-E2E тесты выполняются при каждом push в `main`/`develop` ветки и в pull requests.
+E2E tests run on every push to `main`/`develop` branches and in pull requests.
 
-### Проверка кода
+### Code Quality
 
 ```bash
-# С покрытием кода
-composer test:coverage
-
-# Проверка стиля кода
+# Code style check
 composer lint
+
+# Run all tests
+composer test
 ```
 
-Подробнее: [tests/README.md](tests/README.md)
+**Note:** Code coverage requires PCOV or Xdebug extension. In Docker environments, use:
+
+```bash
+docker exec wp_site-php composer lint
+docker exec wp_site-php composer test:unit
+```
+
+See: [tests/README.md](tests/README.md)
 
 ## Example Plugin
 
 See a complete working example: **[wp-queue-example-plugin](https://github.com/rwsite/wp-queue-example-plugin)**
 
-The example demonstrates:
+The example plugin demonstrates:
 
-- Creating custom jobs
-- Using PHP 8 attributes
-- Scheduling jobs
-- Handling failures
-- Chain and batch processing
+- ✅ Creating custom jobs with PHP 8 attributes
+- ✅ Job scheduling with different intervals
+- ✅ Error handling and retries
+- ✅ Chain and batch processing
+- ✅ Queue management and monitoring
+- ✅ REST API integration
+- ✅ WP-CLI commands
+
+Perfect for learning how to integrate WP Queue into your WordPress plugins!
 
 ## License
 

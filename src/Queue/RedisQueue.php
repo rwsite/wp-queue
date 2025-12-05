@@ -82,11 +82,11 @@ class RedisQueue implements QueueInterface
     protected function resolvePrefix(): string
     {
         if (defined('WP_REDIS_PREFIX')) {
-            return WP_REDIS_PREFIX . self::PREFIX;
+            return WP_REDIS_PREFIX.self::PREFIX;
         }
 
         if (defined('WP_CACHE_KEY_SALT')) {
-            return WP_CACHE_KEY_SALT . self::PREFIX;
+            return WP_CACHE_KEY_SALT.self::PREFIX;
         }
 
         return self::PREFIX;
@@ -124,7 +124,7 @@ class RedisQueue implements QueueInterface
 
                 // TLS support
                 if ($this->config['scheme'] === 'tls' || $this->config['scheme'] === 'rediss') {
-                    $host = 'tls://' . $host;
+                    $host = 'tls://'.$host;
                 }
 
                 $this->connected = $this->redis->connect(
@@ -163,7 +163,7 @@ class RedisQueue implements QueueInterface
             $this->redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
         } catch (\RedisException $e) {
             $this->connected = false;
-            throw new \RuntimeException('Redis connection failed: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Redis connection failed: '.$e->getMessage(), 0, $e);
         }
 
         return $this->redis;
@@ -382,7 +382,7 @@ class RedisQueue implements QueueInterface
      */
     protected function getAllQueues(): array
     {
-        $prefix = $this->config['prefix'] . 'jobs:';
+        $prefix = $this->config['prefix'].'jobs:';
         $keys = $this->connection()->keys('jobs:*');
 
         $queues = [];
@@ -399,17 +399,17 @@ class RedisQueue implements QueueInterface
 
     protected function queueKey(string $queue): string
     {
-        return 'jobs:' . $queue;
+        return 'jobs:'.$queue;
     }
 
     protected function delayedKey(string $queue): string
     {
-        return 'jobs:' . $queue . ':delayed';
+        return 'jobs:'.$queue.':delayed';
     }
 
     protected function reservedKey(string $queue): string
     {
-        return 'jobs:' . $queue . ':reserved';
+        return 'jobs:'.$queue.':reserved';
     }
 
     /**

@@ -73,12 +73,14 @@ test('CLI команда queue:work с параметром --max-jobs огра�
         WPQueue::dispatch($job);
     }
 
+    expect(WPQueue::queueSize('default'))->toBe(10);
+
     $worker = WPQueue::worker();
     $worker->setMaxJobs(5);
 
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 20) {
-        // Обработка до лимита (с защитой от бесконечного цикла)
+    while ($processed < 20 && $worker->runNextJob('default')) {
+        $processed++;
     }
 
     expect((int) get_option('wp_queue_cli_maxjobs_count', 0))->toBe(5);
@@ -98,8 +100,8 @@ test('CLI команда queue:work с параметром --max-time огра�
 
     $startTime = time();
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 100) {
-        // Обработка до таймаута (с защитой от бесконечного цикла)
+    while ($processed < 100 && $worker->runNextJob('default')) {
+        $processed++;
     }
     $elapsed = time() - $startTime;
 
@@ -181,7 +183,7 @@ test('CLI команда queue:failed показывает проваленны�
     $worker->runNextJob('default');
 
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 });
@@ -196,7 +198,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что задача провалилась
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect($failed)->not->toBeEmpty();
 
@@ -207,7 +209,7 @@ test('CLI команда queue:retry повторяет проваленную �
 
     // Проверяем что теперь 2 проваленные задачи
     $logs = WPQueue::logs()->recent(10);
-    $failed = array_filter($logs, fn ($log) => $log['status'] === 'failed');
+    $failed = array_filter($logs, fn($log) => $log['status'] === 'failed');
 
     expect(count($failed))->toBe(2);
 });

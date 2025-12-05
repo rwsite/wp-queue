@@ -101,8 +101,8 @@ test('несколько задач обрабатываются по поряд
     $worker->setMaxJobs(3);
 
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 10) {
-        // Обработка всех задач (с защитой от бесконечного цикла)
+    while ($processed < 10 && $worker->runNextJob('default')) {
+        $processed++;
     }
 
     expect(get_option('wp_queue_execution_order'))->toBe([1, 2, 3]);
@@ -212,8 +212,8 @@ test('worker останавливается после maxJobs', function (): vo
     $worker->setMaxJobs(5);
 
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 20) {
-        // Обработка до лимита (с защитой от бесконечного цикла)
+    while ($processed < 20 && $worker->runNextJob('default')) {
+        $processed++;
     }
 
     expect((int) get_option('wp_queue_maxjobs_count', 0))->toBe(5);
@@ -232,8 +232,8 @@ test('worker останавливается после maxTime', function (): vo
 
     $startTime = time();
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 100) {
-        // Обработка до таймаута (с защитой от бесконечного цикла)
+    while ($processed < 100 && $worker->runNextJob('default')) {
+        $processed++;
     }
     $elapsed = time() - $startTime;
 

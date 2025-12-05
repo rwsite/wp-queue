@@ -152,8 +152,8 @@ test('REST API endpoint /logs с параметром limit ограничива
     $worker = WPQueue::worker();
     $worker->setMaxJobs(5);
     $processed = 0;
-    while ($worker->runNextJob('default') && ++$processed < 10) {
-        // Обработка всех задач (с защитой от бесконечного цикла)
+    while ($processed < 10 && $worker->runNextJob('default')) {
+        $processed++;
     }
 
     $request = new \WP_REST_Request('GET', '/wp-queue/v1/logs');

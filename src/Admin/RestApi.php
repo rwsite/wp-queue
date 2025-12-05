@@ -26,6 +26,24 @@ class RestApi
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
+        register_rest_route($namespace, '/queues/(?P<queue>[a-z0-9_-]+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getQueue'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        register_rest_route($namespace, '/queues/(?P<queue>[a-z0-9_-]+)/jobs', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getQueueJobs'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        register_rest_route($namespace, '/queues/(?P<queue>[a-z0-9_-]+)/process', [
+            'methods' => 'POST',
+            'callback' => [$this, 'processQueue'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
         register_rest_route($namespace, '/queues/(?P<queue>[a-z0-9_-]+)/pause', [
             'methods' => 'POST',
             'callback' => [$this, 'pauseQueue'],
@@ -47,6 +65,12 @@ class RestApi
         register_rest_route($namespace, '/jobs/(?P<job>[^/]+)/run', [
             'methods' => 'POST',
             'callback' => [$this, 'runJob'],
+            'permission_callback' => [$this, 'checkPermission'],
+        ]);
+
+        register_rest_route($namespace, '/stats', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getStats'],
             'permission_callback' => [$this, 'checkPermission'],
         ]);
 
@@ -157,6 +181,98 @@ class RestApi
         return new WP_REST_Response($queues);
     }
 
+    public function getQueue(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        $queueName = $request->get_param('queue');
+        $optionName = 'wp_queue_jobs_'.$queueName;
+
+        // Проверяем существование очереди
+        $jobs = get_site_option($optionName, null);
+
+        // Очередь существует если есть задачи или это очередь default
+        if ($jobs === null && $queueName !== 'default') {
+            return new WP_Error('queue_not_found', 'Queue not found', ['status' => 404]);
+        }
+
+        $jobs = $jobs ?? [];
+
+        return new WP_REST_Response([
+            'name' => $queueName,
+            'size' => count($jobs),
+            'status' => WPQueue::isPaused($queueName) ? 'paused' : 'active',
+            'processing' => WPQueue::isProcessing($queueName),
+        ]);
+    }
+
+    public function getQueueJobs(WP_REST_Request $request): WP_REST_Response
+    {
+        $queueName = $request->get_param('queue');
+        $jobs = get_site_option('wp_queue_jobs_'.$queueName, []);
+
+        $result = [];
+        foreach ($jobs as $index => $job) {
+            $result[] = [
+                'id' => $index,
+                'class' => get_class($job),
+                'attempts' => $job->attempts ?? 0,
+                'available_at' => $job->availableAt ?? time(),
+            ];
+        }
+
+        return new WP_REST_Response($result);
+    }
+
+    public function processQueue(WP_REST_Request $request): WP_REST_Response
+    {
+        $queueName = $request->get_param('queue');
+        $maxJobs = (int) ($request->get_param('max_jobs') ?? 10);
+
+        $worker = WPQueue::worker();
+        $worker->setMaxJobs($maxJobs);
+
+        $processed = 0;
+        while ($processed < $maxJobs && $worker->runNextJob($queueName)) {
+            $processed++;
+        }
+
+        return new WP_REST_Response([
+            'success' => true,
+            'processed' => $processed,
+        ]);
+    }
+
+    public function getStats(): WP_REST_Response
+    {
+        global $wpdb;
+
+        $queues = [];
+        $totalJobs = 0;
+
+        $results = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                'wp_queue_jobs_%',
+            ),
+        );
+
+        foreach ($results as $optionName) {
+            $jobs = get_site_option($optionName, []);
+            $totalJobs += count($jobs);
+        }
+
+        // Получаем статистику из логов
+        $logs = WPQueue::logs();
+        $metrics = $logs->metrics();
+
+        return new WP_REST_Response([
+            'total_queues' => count($results) ?: 1,
+            'total_jobs' => $totalJobs,
+            'total_processed' => $metrics['total'] ?? 0,
+            'total_failed' => $metrics['failed'] ?? 0,
+            'total_completed' => $metrics['completed'] ?? 0,
+        ]);
+    }
+
     public function pauseQueue(WP_REST_Request $request): WP_REST_Response
     {
         $queue = $request->get_param('queue');
@@ -201,7 +317,7 @@ class RestApi
 
     public function getLogs(WP_REST_Request $request): WP_REST_Response
     {
-        $filter = $request->get_param('filter') ?? 'all';
+        $filter = $request->get_param('filter') ?? $request->get_param('status') ?? 'all';
         $limit = (int) ($request->get_param('limit') ?? 100);
 
         $logs = match ($filter) {

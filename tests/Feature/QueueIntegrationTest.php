@@ -103,7 +103,7 @@ test('несколько задач обрабатываются по поряд
         {
             update_option('wp_queue_fifo_test', array_merge(
                 get_option('wp_queue_fifo_test', []),
-                [1]
+                [1],
             ));
         }
     };
@@ -114,7 +114,7 @@ test('несколько задач обрабатываются по поряд
         {
             update_option('wp_queue_fifo_test', array_merge(
                 get_option('wp_queue_fifo_test', []),
-                [2]
+                [2],
             ));
         }
     };
@@ -125,7 +125,7 @@ test('несколько задач обрабатываются по поряд
         {
             update_option('wp_queue_fifo_test', array_merge(
                 get_option('wp_queue_fifo_test', []),
-                [3]
+                [3],
             ));
         }
     };

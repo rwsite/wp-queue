@@ -30,6 +30,9 @@ beforeEach(function (): void {
 
     // Повторная очистка кэша
     wp_cache_flush();
+
+    // Сброс состояния воркера для каждого теста
+    WPQueue::worker()->reset();
 });
 
 afterEach(function (): void {

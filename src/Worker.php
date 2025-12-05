@@ -178,6 +178,18 @@ class Worker
         return $this->maxTime;
     }
 
+    /**
+     * Reset worker state for testing or reuse.
+     * Clears counters and limits to initial values.
+     */
+    public function reset(): void
+    {
+        $this->jobsProcessed = 0;
+        $this->maxJobs = 0;
+        $this->maxTime = 0;
+        $this->startTime = time();
+    }
+
     public function getMemoryLimit(): int
     {
         return $this->memoryLimit;

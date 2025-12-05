@@ -26,6 +26,9 @@ beforeEach(function (): void {
     // Повторная очистка кэша
     wp_cache_flush();
 
+    // Сброс состояния воркера для каждого теста
+    WPQueue::worker()->reset();
+
     // Мок для REST API
     global $wp_rest_server;
     $wp_rest_server = new \WP_REST_Server();

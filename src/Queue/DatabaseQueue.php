@@ -73,22 +73,11 @@ class DatabaseQueue implements QueueInterface
                 unset($jobs[$jobId]);
                 $this->saveQueue($queue, $jobs);
 
-                error_log(sprintf(
-                    'WP Queue: Deleted job %s from queue %s. Remaining: %d',
-                    $jobId,
-                    $queue,
-                    count($jobs),
-                ));
-
                 return true;
             }
         }
 
-        error_log(sprintf(
-            'WP Queue: Failed to delete job %s - not found in any queue',
-            $jobId,
-        ));
-
+        // Job not found - this is normal if it was already deleted or never existed
         return false;
     }
 

@@ -58,6 +58,15 @@ add_action('plugins_loaded', static function (): void {
     \WPQueue\WPQueue::boot();
 });
 
+// Load text domain
+add_action('init', static function (): void {
+    load_plugin_textdomain(
+        'wp-queue',
+        false,
+        dirname(plugin_basename(__FILE__)).'/languages/',
+    );
+});
+
 // Activation
 register_activation_hook(__FILE__, static function (): void {
     \WPQueue\WPQueue::activate();

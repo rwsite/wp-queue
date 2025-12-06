@@ -6,6 +6,8 @@ namespace WPQueue\Queue;
 
 use WPQueue\Contracts\JobInterface;
 use WPQueue\Contracts\QueueInterface;
+use WPQueue\Queue\Redis\RedisClientFactory;
+use WPQueue\Queue\Redis\RedisClientInterface;
 
 /**
  * Redis-based queue implementation.
@@ -22,15 +24,15 @@ use WPQueue\Contracts\QueueInterface;
  * - WP_REDIS_READ_TIMEOUT (default: 1)
  * - WP_REDIS_CLIENT (phpredis/predis)
  *
+ * Supports both phpredis extension and Predis library (via redis-cache plugin).
+ *
  * @see https://github.com/rhubarbgroup/redis-cache
  */
 class RedisQueue implements QueueInterface
 {
     protected const PREFIX = 'wp_queue:';
 
-    protected ?\Redis $redis = null;
-
-    protected bool $connected = false;
+    protected ?RedisClientInterface $client = null;
 
     /**
      * @var array{
@@ -53,6 +55,7 @@ class RedisQueue implements QueueInterface
     public function __construct(array $config = [])
     {
         $this->config = $this->resolveConfig($config);
+        $this->client = RedisClientFactory::create($this->config);
     }
 
     /**
@@ -93,80 +96,21 @@ class RedisQueue implements QueueInterface
     }
 
     /**
-     * Get Redis connection.
+     * Get Redis client.
      *
-     * @throws \RuntimeException If Redis extension not available or connection fails
+     * @throws \RuntimeException If no Redis client available or connection fails
      */
-    protected function connection(): \Redis
+    protected function connection(): RedisClientInterface
     {
-        if ($this->redis !== null && $this->connected) {
-            return $this->redis;
+        if ($this->client === null) {
+            $this->client = RedisClientFactory::create($this->config);
         }
 
-        if (! extension_loaded('redis')) {
-            throw new \RuntimeException('Redis extension (phpredis) is not installed.');
+        if (! $this->client->isConnected()) {
+            $this->client->connect();
         }
 
-        $this->redis = new \Redis();
-
-        try {
-            if ($this->config['scheme'] === 'unix' && $this->config['path']) {
-                $this->connected = $this->redis->connect(
-                    $this->config['path'],
-                    0,
-                    $this->config['timeout'],
-                    null,
-                    0,
-                    $this->config['read_timeout'],
-                );
-            } else {
-                $host = $this->config['host'];
-
-                // TLS support
-                if ($this->config['scheme'] === 'tls' || $this->config['scheme'] === 'rediss') {
-                    $host = 'tls://'.$host;
-                }
-
-                $this->connected = $this->redis->connect(
-                    $host,
-                    $this->config['port'],
-                    $this->config['timeout'],
-                    null,
-                    0,
-                    $this->config['read_timeout'],
-                );
-            }
-
-            if (! $this->connected) {
-                throw new \RuntimeException('Failed to connect to Redis server.');
-            }
-
-            // Authenticate
-            if ($this->config['password']) {
-                $password = $this->config['password'];
-
-                // Support for ACL (username + password array)
-                if (is_array($password) && count($password) === 2) {
-                    $this->redis->auth($password);
-                } elseif (is_string($password)) {
-                    $this->redis->auth($password);
-                }
-            }
-
-            // Select database
-            if ($this->config['database'] > 0) {
-                $this->redis->select($this->config['database']);
-            }
-
-            // Set prefix
-            $this->redis->setOption(\Redis::OPT_PREFIX, $this->config['prefix']);
-            $this->redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
-        } catch (\RedisException $e) {
-            $this->connected = false;
-            throw new \RuntimeException('Redis connection failed: '.$e->getMessage(), 0, $e);
-        }
-
-        return $this->redis;
+        return $this->client;
     }
 
     /**
@@ -174,7 +118,8 @@ class RedisQueue implements QueueInterface
      */
     public static function isAvailable(): bool
     {
-        if (! extension_loaded('redis')) {
+        // Check if any Redis client is available
+        if (! RedisClientFactory::isAvailable()) {
             return false;
         }
 
@@ -186,9 +131,8 @@ class RedisQueue implements QueueInterface
         // Try to connect
         try {
             $queue = new self();
-            $queue->connection()->ping();
 
-            return true;
+            return $queue->connection()->ping();
         } catch (\Throwable) {
             return false;
         }
@@ -207,8 +151,10 @@ class RedisQueue implements QueueInterface
             'database' => $this->config['database'],
             'prefix' => $this->config['prefix'],
             'scheme' => $this->config['scheme'],
-            'connected' => $this->connected,
-            'extension' => extension_loaded('redis') ? phpversion('redis') : 'not installed',
+            'connected' => $this->client?->isConnected() ?? false,
+            'client_type' => $this->client?->getClientType() ?? 'none',
+            'phpredis' => extension_loaded('redis') ? phpversion('redis') : 'not installed',
+            'predis' => RedisClientFactory::isPredisAvailable() ? 'available' : 'not installed',
         ];
     }
 
@@ -226,16 +172,14 @@ class RedisQueue implements QueueInterface
             'created_at' => time(),
         ];
 
+        $jsonData = json_encode($data);
+
         if ($job->getDelay() > 0) {
             // Use sorted set for delayed jobs
-            $this->connection()->zAdd(
-                $this->delayedKey($queue),
-                $availableAt,
-                json_encode($data),
-            );
+            $this->connection()->zAdd($this->delayedKey($queue), (float) $availableAt, $jsonData);
         } else {
             // Use list for immediate jobs
-            $this->connection()->rPush($this->queueKey($queue), json_encode($data));
+            $this->connection()->rPush($this->queueKey($queue), $jsonData);
         }
 
         return $job->getId();
@@ -256,7 +200,7 @@ class RedisQueue implements QueueInterface
         // Pop from queue
         $data = $this->connection()->lPop($this->queueKey($queue));
 
-        if ($data === false || $data === null) {
+        if ($data === null) {
             return null;
         }
 
@@ -432,10 +376,7 @@ class RedisQueue implements QueueInterface
      */
     public function disconnect(): void
     {
-        if ($this->redis !== null && $this->connected) {
-            $this->redis->close();
-            $this->connected = false;
-        }
+        $this->client?->close();
     }
 
     public function __destruct()

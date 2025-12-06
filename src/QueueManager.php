@@ -222,42 +222,224 @@ class QueueManager
     /**
      * Get Redis driver status with detailed checks.
      *
+     * Checks for Redis availability in this order:
+     * 1. PHP extension "redis" (phpredis)
+     * 2. Redis Object Cache plugin (uses Predis library)
+     * 3. Predis library directly
+     *
      * @return array{status: string, extension: bool, server: bool, message: string}
      */
     protected function getRedisStatus(): array
     {
-        // Step 1: Check PHP extension
-        if (! extension_loaded('redis')) {
+        $host = defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1';
+        $port = defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379;
+
+        // Check if Redis is disabled
+        if (defined('WP_REDIS_DISABLED') && WP_REDIS_DISABLED) {
             return [
-                'status' => self::STATUS_NO_EXTENSION,
+                'status' => self::STATUS_UNAVAILABLE,
                 'extension' => false,
                 'server' => false,
-                'message' => __('PHP extension "redis" (phpredis) is not installed', 'wp-queue'),
+                'message' => __('Redis is disabled via WP_REDIS_DISABLED', 'wp-queue'),
             ];
         }
 
-        // Step 2: Check server connectivity
+        // Method 1: Check PHP extension (phpredis)
+        if (extension_loaded('redis')) {
+            return $this->checkRedisViaPhpRedis($host, $port);
+        }
+
+        // Method 2: Check Redis Object Cache plugin
+        if ($this->isRedisObjectCachePluginAvailable()) {
+            return $this->checkRedisViaPlugin($host, $port);
+        }
+
+        // Method 3: Check Predis library directly
+        if ($this->isPredisAvailable()) {
+            return $this->checkRedisViaPredis($host, $port);
+        }
+
+        // No Redis client available
+        return [
+            'status' => self::STATUS_NO_EXTENSION,
+            'extension' => false,
+            'server' => false,
+            'message' => __('PHP extension "redis" (phpredis) is not installed', 'wp-queue'),
+        ];
+    }
+
+    /**
+     * Check Redis connection via phpredis extension.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    protected function checkRedisViaPhpRedis(string $host, int $port): array
+    {
         try {
             $queue = new RedisQueue();
-            // Use reflection to call protected connection() method for testing
             $reflection = new \ReflectionMethod($queue, 'connection');
             $reflection->setAccessible(true);
             $redis = $reflection->invoke($queue);
             $redis->ping();
 
-            $host = defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1';
-            $port = defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379;
+            return [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => sprintf(__('Connected to Redis at %s:%d (phpredis)', 'wp-queue'), $host, $port),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => self::STATUS_NO_SERVER,
+                'extension' => true,
+                'server' => false,
+                'message' => sprintf(
+                    __('Cannot connect to Redis at %s:%d - %s', 'wp-queue'),
+                    $host,
+                    $port,
+                    $e->getMessage(),
+                ),
+            ];
+        }
+    }
+
+    /**
+     * Check if Redis Object Cache plugin is available and connected.
+     */
+    protected function isRedisObjectCachePluginAvailable(): bool
+    {
+        // Check if plugin function exists
+        if (! function_exists('redis_object_cache')) {
+            return false;
+        }
+
+        try {
+            $plugin = redis_object_cache();
+
+            // Check if plugin has get_redis_status method and returns true
+            if (method_exists($plugin, 'get_redis_status')) {
+                return $plugin->get_redis_status() === true;
+            }
+
+            return false;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Check Redis connection via Redis Object Cache plugin.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    protected function checkRedisViaPlugin(string $host, int $port): array
+    {
+        try {
+            $plugin = redis_object_cache();
+
+            // Plugin is connected, try to verify
+            if (method_exists($plugin, 'check_redis_connection')) {
+                $result = $plugin->check_redis_connection();
+
+                if ($result === true) {
+                    return [
+                        'status' => self::STATUS_READY,
+                        'extension' => true,
+                        'server' => true,
+                        'message' => sprintf(__('Connected to Redis at %s:%d (via redis-cache plugin)', 'wp-queue'), $host, $port),
+                    ];
+                }
+
+                // Connection failed with error message
+                return [
+                    'status' => self::STATUS_NO_SERVER,
+                    'extension' => true,
+                    'server' => false,
+                    'message' => is_string($result) ? $result : __('Redis connection failed', 'wp-queue'),
+                ];
+            }
+
+            // Fallback: plugin exists but no check method
+            return [
+                'status' => self::STATUS_READY,
+                'extension' => true,
+                'server' => true,
+                'message' => sprintf(__('Connected to Redis at %s:%d (via redis-cache plugin)', 'wp-queue'), $host, $port),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => self::STATUS_NO_SERVER,
+                'extension' => true,
+                'server' => false,
+                'message' => sprintf(
+                    __('Cannot connect to Redis at %s:%d - %s', 'wp-queue'),
+                    $host,
+                    $port,
+                    $e->getMessage(),
+                ),
+            ];
+        }
+    }
+
+    /**
+     * Check if Predis library is available.
+     */
+    protected function isPredisAvailable(): bool
+    {
+        // Check if Predis is loaded via redis-cache plugin
+        if (defined('WP_REDIS_PLUGIN_PATH') && file_exists(WP_REDIS_PLUGIN_PATH.'/dependencies/predis/predis/autoload.php')) {
+            return true;
+        }
+
+        // Check if Predis is loaded via Composer
+        return class_exists('\Predis\Client');
+    }
+
+    /**
+     * Check Redis connection via Predis library.
+     *
+     * @return array{status: string, extension: bool, server: bool, message: string}
+     */
+    protected function checkRedisViaPredis(string $host, int $port): array
+    {
+        try {
+            // Load Predis from redis-cache plugin if available
+            if (defined('WP_REDIS_PLUGIN_PATH') && file_exists(WP_REDIS_PLUGIN_PATH.'/dependencies/predis/predis/autoload.php')) {
+                require_once WP_REDIS_PLUGIN_PATH.'/dependencies/predis/predis/autoload.php';
+            }
+
+            if (! class_exists('\Predis\Client')) {
+                return [
+                    'status' => self::STATUS_NO_EXTENSION,
+                    'extension' => false,
+                    'server' => false,
+                    'message' => __('Predis library is not available', 'wp-queue'),
+                ];
+            }
+
+            $parameters = [
+                'scheme' => defined('WP_REDIS_SCHEME') ? WP_REDIS_SCHEME : 'tcp',
+                'host' => $host,
+                'port' => $port,
+                'database' => defined('WP_REDIS_DATABASE') ? (int) WP_REDIS_DATABASE : 0,
+                'timeout' => 1,
+                'read_write_timeout' => 1,
+            ];
+
+            if (defined('WP_REDIS_PASSWORD') && WP_REDIS_PASSWORD !== '') {
+                $parameters['password'] = WP_REDIS_PASSWORD;
+            }
+
+            $client = new \Predis\Client($parameters);
+            $client->ping();
 
             return [
                 'status' => self::STATUS_READY,
                 'extension' => true,
                 'server' => true,
-                'message' => sprintf(__('Connected to Redis at %s:%d', 'wp-queue'), $host, $port),
+                'message' => sprintf(__('Connected to Redis at %s:%d (Predis)', 'wp-queue'), $host, $port),
             ];
         } catch (\Throwable $e) {
-            $host = defined('WP_REDIS_HOST') ? WP_REDIS_HOST : '127.0.0.1';
-            $port = defined('WP_REDIS_PORT') ? WP_REDIS_PORT : 6379;
-
             return [
                 'status' => self::STATUS_NO_SERVER,
                 'extension' => true,

@@ -72,7 +72,7 @@
                 },
                 success: function (response) {
                     if (action === 'process') {
-                        this.showToast('Обработано задач: ' + (response.processed || 0), 'success');
+                        this.showToast('Jobs processed: ' + (response.processed || 0), 'success');
                     } else {
                         this.showToast(wpQueue.i18n.success, 'success');
                     }
@@ -98,7 +98,7 @@
             const queue = $btn.data('queue');
 
             if (action === 'delete') {
-                if (!confirm('Удалить эту задачу из очереди?')) {
+                if (!confirm('Delete this job from queue?')) {
                     return;
                 }
 
@@ -112,7 +112,7 @@
                         xhr.setRequestHeader('X-WP-Nonce', wpQueue.nonce);
                     },
                     success: function (response) {
-                        this.showToast('Задача удалена', 'success');
+                        this.showToast('Job deleted', 'success');
                         setTimeout(function () {
                             location.reload();
                         }, 500);
@@ -133,7 +133,7 @@
             const $modal = $('#wp-queue-job-modal');
             const $details = $('#wp-queue-job-details');
 
-            $details.html('<p>Загрузка...</p>');
+            $details.html('<p>Loading...</p>');
             $modal.show();
 
             $.ajax({
@@ -147,19 +147,19 @@
                     let html = '<table class="wp-list-table widefat fixed striped">';
                     html += '<tbody>';
                     html += '<tr><th>ID</th><td><code>' + (response.id || jobId) + '</code></td></tr>';
-                    html += '<tr><th>Класс</th><td><code>' + (response.class || 'Неизвестно') + '</code></td></tr>';
-                    html += '<tr><th>Очередь</th><td>' + (response.queue || queue) + '</td></tr>';
-                    html += '<tr><th>Попытки</th><td>' + (response.attempts || 0) + '</td></tr>';
-                    html += '<tr><th>Доступна с</th><td>' + (response.available_at ? new Date(response.available_at * 1000).toLocaleString() : '-') + '</td></tr>';
-                    html += '<tr><th>Зарезервирована</th><td>' + (response.reserved_at ? new Date(response.reserved_at * 1000).toLocaleString() : 'Нет') + '</td></tr>';
+                    html += '<tr><th>Class</th><td><code>' + (response.class || 'Unknown') + '</code></td></tr>';
+                    html += '<tr><th>Queue</th><td>' + (response.queue || queue) + '</td></tr>';
+                    html += '<tr><th>Attempts</th><td>' + (response.attempts || 0) + '</td></tr>';
+                    html += '<tr><th>Available From</th><td>' + (response.available_at ? new Date(response.available_at * 1000).toLocaleString() : '-') + '</td></tr>';
+                    html += '<tr><th>Reserved</th><td>' + (response.reserved_at ? new Date(response.reserved_at * 1000).toLocaleString() : 'No') + '</td></tr>';
                     if (response.payload) {
-                        html += '<tr><th>Данные</th><td><pre style="max-height:200px;overflow:auto;font-size:11px;">' + JSON.stringify(response.payload, null, 2) + '</pre></td></tr>';
+                        html += '<tr><th>Data</th><td><pre style="max-height:200px;overflow:auto;font-size:11px;">' + JSON.stringify(response.payload, null, 2) + '</pre></td></tr>';
                     }
                     html += '</tbody></table>';
                     $details.html(html);
                 }.bind(this),
                 error: function (xhr) {
-                    $details.html('<p class="error">Не удалось загрузить детали задачи</p>');
+                    $details.html('<p class="error">Failed to load job details</p>');
                 }.bind(this)
             });
         },
@@ -193,7 +193,7 @@
         handleClearLogs: function (e) {
             e.preventDefault();
 
-            if (!confirm('Очистить логи старше 7 дней?')) {
+            if (!confirm('Clear logs older than 7 days?')) {
                 return;
             }
 
@@ -208,7 +208,7 @@
                     xhr.setRequestHeader('X-WP-Nonce', wpQueue.nonce);
                 },
                 success: function (response) {
-                    this.showToast('Очищено логов: ' + response.cleared, 'success');
+                    this.showToast('Logs cleared: ' + response.cleared, 'success');
                     setTimeout(function () {
                         location.reload();
                     }, 500);
@@ -225,7 +225,7 @@
         handleClearAllLogs: function (e) {
             e.preventDefault();
 
-            if (!confirm('Удалить ВСЕ логи? Это действие нельзя отменить.')) {
+            if (!confirm('Delete ALL logs? This action cannot be undone.')) {
                 return;
             }
 
@@ -240,7 +240,7 @@
                     xhr.setRequestHeader('X-WP-Nonce', wpQueue.nonce);
                 },
                 success: function (response) {
-                    this.showToast('Все логи удалены', 'success');
+                    this.showToast('All logs deleted', 'success');
                     setTimeout(function () {
                         location.reload();
                     }, 500);
@@ -267,7 +267,7 @@
                     xhr.setRequestHeader('X-WP-Nonce', wpQueue.nonce);
                 },
                 success: function (response) {
-                    this.showToast('Обработано задач: ' + (response.processed || 0), 'success');
+                    this.showToast('Jobs processed: ' + (response.processed || 0), 'success');
                     setTimeout(function () {
                         location.reload();
                     }, 500);
@@ -284,7 +284,7 @@
         handleClearAllQueues: function (e) {
             e.preventDefault();
 
-            if (!confirm('Очистить ВСЕ очереди? Это удалит все задачи!')) {
+            if (!confirm('Clear ALL queues? This will delete all jobs!')) {
                 return;
             }
 
@@ -298,7 +298,7 @@
                     xhr.setRequestHeader('X-WP-Nonce', wpQueue.nonce);
                 },
                 success: function (response) {
-                    this.showToast('Все очереди очищены', 'success');
+                    this.showToast('All queues cleared', 'success');
                     setTimeout(function () {
                         location.reload();
                     }, 500);

@@ -32,29 +32,29 @@ class AdminPage
     public function initTabs(): void
     {
         $this->tabs = [
-            'queues' => ['title' => __('Очереди', 'wp-queue'), 'icon' => 'dashicons-database'],
-            'scheduler' => ['title' => __('Планировщик', 'wp-queue'), 'icon' => 'dashicons-clock'],
-            'system' => ['title' => __('Система', 'wp-queue'), 'icon' => 'dashicons-admin-tools'],
+            'queues' => ['title' => __('Queues', 'wp-queue'), 'icon' => 'dashicons-database'],
+            'scheduler' => ['title' => __('Scheduler', 'wp-queue'), 'icon' => 'dashicons-clock'],
+            'system' => ['title' => __('System', 'wp-queue'), 'icon' => 'dashicons-admin-tools'],
         ];
 
         $this->sections = [
             'queues' => [
-                'overview' => ['title' => __('Обзор', 'wp-queue'), 'icon' => 'dashicons-chart-bar'],
-                'jobs' => ['title' => __('Задачи в очереди', 'wp-queue'), 'icon' => 'dashicons-list-view'],
-                'history' => ['title' => __('История', 'wp-queue'), 'icon' => 'dashicons-backup'],
-                'failed' => ['title' => __('Ошибки', 'wp-queue'), 'icon' => 'dashicons-dismiss'],
-                'drivers' => ['title' => __('Драйверы', 'wp-queue'), 'icon' => 'dashicons-admin-generic'],
+                'overview' => ['title' => __('Overview', 'wp-queue'), 'icon' => 'dashicons-chart-bar'],
+                'jobs' => ['title' => __('Jobs in Queue', 'wp-queue'), 'icon' => 'dashicons-list-view'],
+                'history' => ['title' => __('History', 'wp-queue'), 'icon' => 'dashicons-backup'],
+                'failed' => ['title' => __('Failed', 'wp-queue'), 'icon' => 'dashicons-dismiss'],
+                'drivers' => ['title' => __('Drivers', 'wp-queue'), 'icon' => 'dashicons-admin-generic'],
             ],
             'scheduler' => [
-                'overview' => ['title' => __('Обзор', 'wp-queue'), 'icon' => 'dashicons-chart-bar'],
-                'events' => ['title' => __('Cron события', 'wp-queue'), 'icon' => 'dashicons-calendar-alt'],
-                'scheduled' => ['title' => __('Запланированные', 'wp-queue'), 'icon' => 'dashicons-clock'],
-                'paused' => ['title' => __('Приостановленные', 'wp-queue'), 'icon' => 'dashicons-controls-pause'],
+                'overview' => ['title' => __('Overview', 'wp-queue'), 'icon' => 'dashicons-chart-bar'],
+                'events' => ['title' => __('Cron Events', 'wp-queue'), 'icon' => 'dashicons-calendar-alt'],
+                'scheduled' => ['title' => __('Scheduled', 'wp-queue'), 'icon' => 'dashicons-clock'],
+                'paused' => ['title' => __('Paused', 'wp-queue'), 'icon' => 'dashicons-controls-pause'],
             ],
             'system' => [
-                'status' => ['title' => __('Статус системы', 'wp-queue'), 'icon' => 'dashicons-heart'],
-                'tools' => ['title' => __('Инструменты', 'wp-queue'), 'icon' => 'dashicons-admin-tools'],
-                'help' => ['title' => __('Справка', 'wp-queue'), 'icon' => 'dashicons-editor-help'],
+                'status' => ['title' => __('System Status', 'wp-queue'), 'icon' => 'dashicons-heart'],
+                'tools' => ['title' => __('Tools', 'wp-queue'), 'icon' => 'dashicons-admin-tools'],
+                'help' => ['title' => __('Help', 'wp-queue'), 'icon' => 'dashicons-editor-help'],
             ],
         ];
     }
@@ -244,15 +244,16 @@ wp queue system              # Show system status</code></pre>';
     {
         $tabTitle = $this->tabs[$tab]['title'] ?? '';
         $sectionTitle = $this->sections[$tab][$section]['title'] ?? '';
+        $breadcrumb = '';
 
-        $breadcrumb = '/ '.esc_html($tabTitle).' / '.esc_html($sectionTitle);
         if ($queueView) {
-            $breadcrumb = '/ '.esc_html($tabTitle).' / <a href="'.esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=overview')).'">'.esc_html__('Обзор', 'wp-queue').'</a> / '.esc_html($queueView);
+            $breadcrumb = '/ '.esc_html($tabTitle).' / <a href="'.esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=overview')).'">'.esc_html__('Overview', 'wp-queue').'</a> / '.esc_html($queueView);
+        } else {
+            $breadcrumb = '/ '.esc_html($tabTitle).' / '.esc_html($sectionTitle);
         }
         ?>
         <div class="wp-queue-header">
             <div class="wp-queue-header-left">
-                <span class="dashicons dashicons-database wp-queue-logo-icon"></span>
                 <span class="wp-queue-title">WP Queue</span>
                 <span class="wp-queue-breadcrumb">
                     <?php echo wp_kses($breadcrumb, ['a' => ['href' => []]]); ?>
@@ -310,7 +311,7 @@ wp queue system              # Show system status</code></pre>';
         ?>
         <div class="wp-queue-section-header">
             <h1><?php echo esc_html($this->sections[$tab][$section]['title']); ?></h1>
-            <p class="description"><?php echo esc_html__('Этот раздел находится в разработке.', 'wp-queue'); ?></p>
+            <p class="description"><?php echo esc_html__('This section is under development.', 'wp-queue'); ?></p>
         </div>
     <?php
     }
@@ -318,12 +319,12 @@ wp queue system              # Show system status</code></pre>';
     private function getStatusLabel(string $status): string
     {
         return match ($status) {
-            'idle' => __('Простаивает', 'wp-queue'),
-            'pending' => __('Ожидает', 'wp-queue'),
-            'running' => __('Работает', 'wp-queue'),
-            'paused' => __('Пауза', 'wp-queue'),
-            'completed' => __('Завершено', 'wp-queue'),
-            'failed' => __('Ошибка', 'wp-queue'),
+            'idle' => __('Idle', 'wp-queue'),
+            'pending' => __('Pending', 'wp-queue'),
+            'running' => __('Running', 'wp-queue'),
+            'paused' => __('Paused', 'wp-queue'),
+            'completed' => __('Completed', 'wp-queue'),
+            'failed' => __('Failed', 'wp-queue'),
             default => ucfirst($status),
         };
     }
@@ -340,34 +341,34 @@ wp queue system              # Show system status</code></pre>';
             <div class="wp-queue-stats">
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=jobs')); ?>" class="stat-card stat-pending <?php echo $filter === 'pending' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $this->getTotalPending()); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('В очереди', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('In Queue', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=overview&status=running')); ?>" class="stat-card stat-running <?php echo $filter === 'running' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $this->getRunningCount()); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Выполняется', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Running', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=history&filter=completed')); ?>" class="stat-card stat-completed <?php echo $filter === 'completed' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $metrics['completed']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Завершено', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Completed', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=failed')); ?>" class="stat-card stat-failed <?php echo $filter === 'failed' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $metrics['failed']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Ошибок', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Failed', 'wp-queue'); ?></span>
                 </a>
             </div>
 
             <!-- Информация о драйвере -->
             <div class="wp-queue-driver-info">
                 <span class="dashicons dashicons-admin-generic"></span>
-                <?php echo esc_html__('Драйвер:', 'wp-queue'); ?>
+                <?php echo esc_html__('Driver:', 'wp-queue'); ?>
                 <strong><?php echo esc_html(ucfirst($driver)); ?></strong>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&section=drivers')); ?>" class="driver-link">
-                    <?php echo esc_html__('Настроить', 'wp-queue'); ?>
+                    <?php echo esc_html__('Configure', 'wp-queue'); ?>
                 </a>
             </div>
 
             <!-- Очереди как полностью кликабельные карточки -->
-            <h2><?php echo esc_html__('Очереди', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Queues', 'wp-queue'); ?></h2>
             <div class="wp-queue-cards">
                 <?php foreach ($queues as $name => $data) { ?>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=queues&queue='.urlencode($name))); ?>" class="queue-card queue-card-<?php echo esc_attr($data['status']); ?>">
@@ -380,7 +381,7 @@ wp queue system              # Show system status</code></pre>';
                         <div class="queue-card-body">
                             <div class="queue-card-stat">
                                 <span class="queue-stat-number"><?php echo esc_html((string) $data['size']); ?></span>
-                                <span class="queue-stat-label"><?php echo esc_html__('задач', 'wp-queue'); ?></span>
+                                <span class="queue-stat-label"><?php echo esc_html__('jobs', 'wp-queue'); ?></span>
                             </div>
                         </div>
                         <div class="queue-card-footer">
@@ -391,7 +392,7 @@ wp queue system              # Show system status</code></pre>';
             </div>
 
             <!-- Последняя активность -->
-            <h2><?php echo esc_html__('Последняя активность', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Recent Activity', 'wp-queue'); ?></h2>
             <?php $this->renderRecentLogs(10); ?>
         </div>
     <?php
@@ -416,15 +417,15 @@ wp queue system              # Show system status</code></pre>';
             <!-- Заголовок с действиями -->
             <div class="queue-detail-header">
                 <div class="queue-detail-title">
-                    <h1><?php echo esc_html(sprintf(__('Очередь: %s', 'wp-queue'), $queueName)); ?></h1>
+                    <h1><?php echo esc_html(sprintf(__('Queue: %s', 'wp-queue'), $queueName)); ?></h1>
                     <span class="status-badge status-<?php echo $isPaused ? 'paused' : ($isProcessing ? 'running' : 'idle'); ?>">
                         <?php
                             if ($isPaused) {
-                                echo esc_html__('Приостановлена', 'wp-queue');
+                                echo esc_html__('Paused', 'wp-queue');
                             } elseif ($isProcessing) {
-                                echo esc_html__('Обрабатывается', 'wp-queue');
+                                echo esc_html__('Processing', 'wp-queue');
                             } else {
-                                echo esc_html__('Активна', 'wp-queue');
+                                echo esc_html__('Active', 'wp-queue');
                             }
         ?>
                     </span>
@@ -433,21 +434,21 @@ wp queue system              # Show system status</code></pre>';
                     <?php if ($isPaused) { ?>
                         <button class="button button-primary wp-queue-action" data-action="resume" data-queue="<?php echo esc_attr($queueName); ?>">
                             <span class="dashicons dashicons-controls-play"></span>
-                            <?php echo esc_html__('Возобновить', 'wp-queue'); ?>
+                            <?php echo esc_html__('Resume', 'wp-queue'); ?>
                         </button>
                     <?php } else { ?>
                         <button class="button wp-queue-action" data-action="pause" data-queue="<?php echo esc_attr($queueName); ?>">
                             <span class="dashicons dashicons-controls-pause"></span>
-                            <?php echo esc_html__('Пауза', 'wp-queue'); ?>
+                            <?php echo esc_html__('Pause', 'wp-queue'); ?>
                         </button>
                     <?php } ?>
                     <button class="button wp-queue-action" data-action="process" data-queue="<?php echo esc_attr($queueName); ?>">
                         <span class="dashicons dashicons-update"></span>
-                        <?php echo esc_html__('Обработать сейчас', 'wp-queue'); ?>
+                        <?php echo esc_html__('Process Now', 'wp-queue'); ?>
                     </button>
                     <button class="button wp-queue-action" data-action="clear" data-queue="<?php echo esc_attr($queueName); ?>">
                         <span class="dashicons dashicons-trash"></span>
-                        <?php echo esc_html__('Очистить', 'wp-queue'); ?>
+                        <?php echo esc_html__('Clear', 'wp-queue'); ?>
                     </button>
                 </div>
             </div>
@@ -456,15 +457,15 @@ wp queue system              # Show system status</code></pre>';
             <div class="wp-queue-stats" style="margin-bottom: 20px;">
                 <div class="stat-card">
                     <span class="stat-number"><?php echo esc_html((string) $totalJobs); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Всего задач', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Total Jobs', 'wp-queue'); ?></span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-number"><?php echo esc_html((string) $this->countPendingJobs($jobs)); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Ожидают', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Pending', 'wp-queue'); ?></span>
                 </div>
                 <div class="stat-card stat-running">
                     <span class="stat-number"><?php echo esc_html((string) $this->countReservedJobs($jobs)); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('В обработке', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Processing', 'wp-queue'); ?></span>
                 </div>
             </div>
 
@@ -473,24 +474,24 @@ wp queue system              # Show system status</code></pre>';
                 <thead>
                     <tr>
                         <th style="width: 80px;"><?php echo esc_html__('ID', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Класс задачи', 'wp-queue'); ?></th>
-                        <th style="width: 80px;"><?php echo esc_html__('Попытки', 'wp-queue'); ?></th>
-                        <th style="width: 150px;"><?php echo esc_html__('Доступна с', 'wp-queue'); ?></th>
-                        <th style="width: 100px;"><?php echo esc_html__('Статус', 'wp-queue'); ?></th>
-                        <th style="width: 150px;"><?php echo esc_html__('Действия', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Job Class', 'wp-queue'); ?></th>
+                        <th style="width: 80px;"><?php echo esc_html__('Attempts', 'wp-queue'); ?></th>
+                        <th style="width: 150px;"><?php echo esc_html__('Available From', 'wp-queue'); ?></th>
+                        <th style="width: 100px;"><?php echo esc_html__('Status', 'wp-queue'); ?></th>
+                        <th style="width: 150px;"><?php echo esc_html__('Actions', 'wp-queue'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($pagedJobs)) { ?>
                         <tr>
-                            <td colspan="6" class="no-items"><?php echo esc_html__('Очередь пуста', 'wp-queue'); ?></td>
+                            <td colspan="6" class="no-items"><?php echo esc_html__('Queue is empty', 'wp-queue'); ?></td>
                         </tr>
                     <?php } else { ?>
                         <?php foreach ($pagedJobs as $id => $job) { ?>
                             <tr>
                                 <td><code title="<?php echo esc_attr($id); ?>"><?php echo esc_html(substr($id, 0, 8)); ?>...</code></td>
                                 <td>
-                                    <code><?php echo esc_html($job['class'] ?? __('Неизвестно', 'wp-queue')); ?></code>
+                                    <code><?php echo esc_html($job['class'] ?? __('Unknown', 'wp-queue')); ?></code>
                                     <?php if (! empty($job['payload_preview'])) { ?>
                                         <br><small class="description"><?php echo esc_html($job['payload_preview']); ?></small>
                                     <?php } ?>
@@ -500,9 +501,9 @@ wp queue system              # Show system status</code></pre>';
                                     <?php
                     $availableAt = $job['available_at'] ?? 0;
                             if ($availableAt > time()) {
-                                echo esc_html(human_time_diff($availableAt, time())).' '.esc_html__('позже', 'wp-queue');
+                                echo esc_html(human_time_diff($availableAt, time())).' '.esc_html__('from now', 'wp-queue');
                             } else {
-                                echo esc_html__('Сейчас', 'wp-queue');
+                                echo esc_html__('Now', 'wp-queue');
                             }
                             ?>
                                 </td>
@@ -520,10 +521,10 @@ wp queue system              # Show system status</code></pre>';
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="button button-small wp-queue-job-action" data-action="view" data-job="<?php echo esc_attr($id); ?>" data-queue="<?php echo esc_attr($queueName); ?>" title="<?php echo esc_attr__('Подробности', 'wp-queue'); ?>">
+                                    <button class="button button-small wp-queue-job-action" data-action="view" data-job="<?php echo esc_attr($id); ?>" data-queue="<?php echo esc_attr($queueName); ?>" title="<?php echo esc_attr__('Details', 'wp-queue'); ?>">
                                         <span class="dashicons dashicons-visibility"></span>
                                     </button>
-                                    <button class="button button-small wp-queue-job-action" data-action="delete" data-job="<?php echo esc_attr($id); ?>" data-queue="<?php echo esc_attr($queueName); ?>" title="<?php echo esc_attr__('Удалить', 'wp-queue'); ?>">
+                                    <button class="button button-small wp-queue-job-action" data-action="delete" data-job="<?php echo esc_attr($id); ?>" data-queue="<?php echo esc_attr($queueName); ?>" title="<?php echo esc_attr__('Delete', 'wp-queue'); ?>">
                                         <span class="dashicons dashicons-trash"></span>
                                     </button>
                                 </td>
@@ -538,7 +539,7 @@ wp queue system              # Show system status</code></pre>';
                 <div class="tablenav bottom">
                     <div class="tablenav-pages">
                         <span class="displaying-num">
-                            <?php echo esc_html(sprintf(__('%d задач', 'wp-queue'), $totalJobs)); ?>
+                            <?php echo esc_html(sprintf(__('%d tasks', 'wp-queue'), $totalJobs)); ?>
                         </span>
                         <span class="pagination-links">
                             <?php
@@ -560,10 +561,10 @@ wp queue system              # Show system status</code></pre>';
         <!-- Модальное окно для просмотра деталей джоба -->
         <div id="wp-queue-job-modal" class="wp-queue-modal" style="display:none;">
             <div class="wp-queue-modal-content" style="max-width: 700px;">
-                <h2><?php echo esc_html__('Детали задачи', 'wp-queue'); ?></h2>
+                <h2><?php echo esc_html__('Job Details', 'wp-queue'); ?></h2>
                 <div id="wp-queue-job-details"></div>
                 <p class="submit">
-                    <button type="button" class="button wp-queue-modal-close"><?php echo esc_html__('Закрыть', 'wp-queue'); ?></button>
+                    <button type="button" class="button wp-queue-modal-close"><?php echo esc_html__('Close', 'wp-queue'); ?></button>
                 </p>
             </div>
         </div>
@@ -579,7 +580,7 @@ wp queue system              # Show system status</code></pre>';
         <div class="wp-queue-jobs">
             <p class="description">
                 <?php echo esc_html__(
-                    'Отображает таблицу запланированных повторяющихся задач (PHP-классов), зарегистрированных в WP Queue: класс задачи, интервал выполнения, очередь назначения и время следующего запуска. Позволяет запускать любую задачу вручную.',
+                    'Displays a table of scheduled recurring tasks (PHP classes) registered in WP Queue: job class, execution interval, queue assignment, and next run time. Allows you to run any task manually.',
                     'wp-queue',
                 ); ?>
             </p>
@@ -702,20 +703,20 @@ wp queue system              # Show system status</code></pre>';
 
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
 
-            <h3><?php echo esc_html__('Подробное описание вкладок панели', 'wp-queue'); ?></h3>
+            <h3><?php echo esc_html__('Detailed description of the panel tabs', 'wp-queue'); ?></h3>
             <div class="wp-queue-accordion" style="margin-top: 20px;">
                 <details>
                     <summary style="cursor: pointer; font-weight: bold; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
                         <?php echo esc_html__('Dashboard', 'wp-queue'); ?>
                     </summary>
                     <div style="padding: 15px; border: 1px solid #ddd; border-top: none; margin-bottom: 10px;">
-                        <p><?php echo esc_html__('Главная вкладка для мониторинга состояния очередей в реальном времени.', 'wp-queue'); ?></p>
+                        <p><?php echo esc_html__('The main tab for monitoring queue status in real-time.', 'wp-queue'); ?></p>
                         <ul style="list-style: disc; padding-left: 20px;">
-                            <li><strong><?php echo esc_html__('Статистика очередей', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Показывает общее количество задач в разных статусах (ожидающие, выполняющиеся, завершенные, провалившиеся).', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Таблица очередей', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Список всех активных очередей с их размером, статусом (idle/pending/running/paused) и кнопками управления (пауза/возобновление, очистка всех задач).', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Недавняя активность', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Последние 10 записей из логов выполнения задач для быстрого отслеживания работы.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Queue statistics', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Displays the total number of tasks in different statuses (pending, running, completed, failed).', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Queue table', 'wp-queue'); ?>:</strong> <?php echo esc_html__('A list of all active queues with their size, status (idle/pending/running/paused), and control buttons (pause/resume, clear all tasks).', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Recent activity', 'wp-queue'); ?>:</strong> <?php echo esc_html__('The last 10 log entries for quick tracking of queue activity.', 'wp-queue'); ?></li>
                         </ul>
-                        <p><em><?php echo esc_html__('Используйте эту вкладку для быстрой проверки работоспособности очередей и выявления зависших процессов.', 'wp-queue'); ?></em></p>
+                        <p><em><?php echo esc_html__('Use this tab for quick checks of queue performance and identifying stuck processes.', 'wp-queue'); ?></em></p>
                     </div>
                 </details>
 
@@ -724,14 +725,14 @@ wp queue system              # Show system status</code></pre>';
                         <?php echo esc_html__('Scheduled Jobs', 'wp-queue'); ?>
                     </summary>
                     <div style="padding: 15px; border: 1px solid #ddd; border-top: none; margin-bottom: 10px;">
-                        <p><?php echo esc_html__('Управление запланированными повторяющимися задачами.', 'wp-queue'); ?></p>
+                        <p><?php echo esc_html__('Management of scheduled recurring tasks.', 'wp-queue'); ?></p>
                         <ul style="list-style: disc; padding-left: 20px;">
-                            <li><strong><?php echo esc_html__('Список задач', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Показывает все зарегистрированные PHP-классы задач с их конфигурацией.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Информация по каждой задаче', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Класс задачи, интервал выполнения (например, "hourly", "daily"), очередь назначения, время следующего запуска.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Ручной запуск', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Кнопка "Run Now" позволяет запустить любую задачу немедленно, не дожидаясь расписания.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Статус следующего запуска', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Показывает, когда задача должна выполниться в следующий раз, или отмечает просроченные задачи.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Job list', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Displays all registered PHP job classes with their configuration.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Job information', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Job class, execution interval (e.g., "hourly", "daily"), queue assignment, next run time.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Manual run', 'wp-queue'); ?>:</strong> <?php echo esc_html__('The "Run Now" button allows you to run any job immediately, without waiting for the schedule.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Next run status', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Displays when the job should run next or marks overdue jobs.', 'wp-queue'); ?></li>
                         </ul>
-                        <p><em><?php echo esc_html__('Полезно для тестирования задач и принудительного запуска синхронизаций.', 'wp-queue'); ?></em></p>
+                        <p><em><?php echo esc_html__('Useful for testing jobs and forcing synchronizations.', 'wp-queue'); ?></em></p>
                     </div>
                 </details>
 
@@ -740,14 +741,14 @@ wp queue system              # Show system status</code></pre>';
                         <?php echo esc_html__('Logs', 'wp-queue'); ?>
                     </summary>
                     <div style="padding: 15px; border: 1px solid #ddd; border-top: none; margin-bottom: 10px;">
-                        <p><?php echo esc_html__('История выполнения всех задач для диагностики и отладки.', 'wp-queue'); ?></p>
+                        <p><?php echo esc_html__('History of all job executions for diagnostics and debugging.', 'wp-queue'); ?></p>
                         <ul style="list-style: disc; padding-left: 20px;">
-                            <li><strong><?php echo esc_html__('Фильтры по статусу', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Кнопки для показа всех записей, только завершенных или только провалившихся задач.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Таблица логов', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Время выполнения, статус (completed/failed/retrying), класс задачи, очередь, сообщение об ошибке.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Очистка логов', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Кнопка для удаления старых записей логов, чтобы не засорять базу данных.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Количество записей', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Показывает последние 200 записей по умолчанию, или все завершенные/провалившиеся.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Status filters', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Buttons to show all entries, only completed, or only failed jobs.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Log table', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Execution time, status (completed/failed/retrying), job class, queue, error message.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Clear logs', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Button to delete old log entries to avoid cluttering the database.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Number of entries', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Displays the last 200 entries by default or all completed/failed.', 'wp-queue'); ?></li>
                         </ul>
-                        <p><em><?php echo esc_html__('Обязательно проверяйте логи при возникновении ошибок в фоновых процессах.', 'wp-queue'); ?></em></p>
+                        <p><em><?php echo esc_html__('Check logs when encountering errors in background processes.', 'wp-queue'); ?></em></p>
                     </div>
                 </details>
 
@@ -756,15 +757,15 @@ wp queue system              # Show system status</code></pre>';
                         <?php echo esc_html__('WP-Cron', 'wp-queue'); ?>
                     </summary>
                     <div style="padding: 15px; border: 1px solid #ddd; border-top: none; margin-bottom: 10px;">
-                        <p><?php echo esc_html__('Управление системными таймерами WordPress, которые запускают фоновые процессы.', 'wp-queue'); ?></p>
+                        <p><?php echo esc_html__('Management of WordPress system timers that trigger background processes.', 'wp-queue'); ?></p>
                         <ul style="list-style: disc; padding-left: 20px;">
-                            <li><strong><?php echo esc_html__('Статистика событий', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Общее количество событий, просроченных, группировка по источнику (WordPress, WooCommerce, WP Queue, plugins).', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Таблица событий', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Хук события, время следующего запуска, расписание (single/hourly/daily), источник, аргументы.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Действия с событиями', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Запуск сейчас, редактирование расписания, пауза, удаление. Модальное окно для изменения интервала.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Приостановленные события', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Отдельная таблица для событий, которые временно отключены.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Зарегистрированные расписания', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Таблица всех доступных интервалов (hourly, daily, etc.) с их длительностью.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Event statistics', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Total number of events, overdue, grouped by source (WordPress, WooCommerce, WP Queue, plugins).', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Event table', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Event hook, next run time, schedule (single/hourly/daily), source, arguments.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Event actions', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Run now, edit schedule, pause, delete. Modal window for changing interval.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Paused events', 'wp-queue'); ?>:</strong> <?php echo esc_html__('A separate table for events that are temporarily disabled.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Registered schedules', 'wp-queue'); ?>:</strong> <?php echo esc_html__('A table of all available intervals (hourly, daily, etc.) with their duration.', 'wp-queue'); ?></li>
                         </ul>
-                        <p><em><?php echo esc_html__('Критично для понимания, почему задачи не запускаются вовремя.', 'wp-queue'); ?></em></p>
+                        <p><em><?php echo esc_html__('Critical for understanding why tasks are not running on time.', 'wp-queue'); ?></em></p>
                     </div>
                 </details>
 
@@ -773,15 +774,15 @@ wp queue system              # Show system status</code></pre>';
                         <?php echo esc_html__('System', 'wp-queue'); ?>
                     </summary>
                     <div style="padding: 15px; border: 1px solid #ddd; border-top: none; margin-bottom: 10px;">
-                        <p><?php echo esc_html__('Проверка системных требований и окружения для стабильной работы очередей.', 'wp-queue'); ?></p>
+                        <p><?php echo esc_html__('Checking system requirements and environment for stable queue operation.', 'wp-queue'); ?></p>
                         <ul style="list-style: disc; padding-left: 20px;">
-                            <li><strong><?php echo esc_html__('Здоровье системы', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Уведомления о критических проблемах (низкая память, отключенный WP-Cron).', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Окружение', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Версии PHP и WordPress, лимиты памяти (текущий usage), максимальное время выполнения, таймзона.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('WP-Cron статус', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Проверка отключения (DISABLE_WP_CRON), альтернативного крона, loopback запросов.', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Action Scheduler', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Если установлен, показывает версию и статистику (pending/running/failed actions).', 'wp-queue'); ?></li>
-                            <li><strong><?php echo esc_html__('Время сервера', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Сравнение времени сервера, WordPress и GMT offset для диагностики проблем с расписаниями.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('System health', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Notifications of critical issues (low memory, disabled WP-Cron).', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Environment', 'wp-queue'); ?>:</strong> <?php echo esc_html__('PHP and WordPress versions, memory limits (current usage), maximum execution time, timezone.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('WP-Cron status', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Checking for disablement (DISABLE_WP_CRON), alternative cron, loopback requests.', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Action Scheduler', 'wp-queue'); ?>:</strong> <?php echo esc_html__('If installed, displays version and statistics (pending/running/failed actions).', 'wp-queue'); ?></li>
+                            <li><strong><?php echo esc_html__('Server time', 'wp-queue'); ?>:</strong> <?php echo esc_html__('Comparison of server time, WordPress, and GMT offset for diagnosing scheduling issues.', 'wp-queue'); ?></li>
                         </ul>
-                        <p><em><?php echo esc_html__('Проверяйте эту вкладку при настройке сервера или отладке проблем с очередями.', 'wp-queue'); ?></em></p>
+                        <p><em><?php echo esc_html__('Check this tab when setting up your server or debugging queue issues.', 'wp-queue'); ?></em></p>
                     </div>
                 </details>
             </div>
@@ -833,18 +834,18 @@ wp queue system              # Show system status</code></pre>';
             <div class="tablenav top">
                 <div class="alignleft actions">
                     <a href="?page=wp-queue&tab=queues&section=history&filter=all" class="button <?php echo $filter === 'all' ? 'button-primary' : ''; ?>">
-                        <?php echo esc_html__('Все', 'wp-queue'); ?>
+                        <?php echo esc_html__('All', 'wp-queue'); ?>
                     </a>
                     <a href="?page=wp-queue&tab=queues&section=history&filter=completed" class="button <?php echo $filter === 'completed' ? 'button-primary' : ''; ?>">
-                        <?php echo esc_html__('Завершённые', 'wp-queue'); ?>
+                        <?php echo esc_html__('Completed', 'wp-queue'); ?>
                     </a>
                     <a href="?page=wp-queue&tab=queues&section=history&filter=failed" class="button <?php echo $filter === 'failed' ? 'button-primary' : ''; ?>">
-                        <?php echo esc_html__('Ошибки', 'wp-queue'); ?>
+                        <?php echo esc_html__('Failed', 'wp-queue'); ?>
                     </a>
 
                     <?php if (! empty($queuesInLogs)) { ?>
                         <select id="queue-filter" class="wp-queue-filter-select">
-                            <option value=""><?php echo esc_html__('Все очереди', 'wp-queue'); ?></option>
+                            <option value=""><?php echo esc_html__('All queues', 'wp-queue'); ?></option>
                             <?php foreach ($queuesInLogs as $q) { ?>
                                 <option value="<?php echo esc_attr($q); ?>" <?php selected($queueFilter, $q); ?>>
                                     <?php echo esc_html($q); ?>
@@ -854,13 +855,13 @@ wp queue system              # Show system status</code></pre>';
                     <?php } ?>
                 </div>
                 <div class="alignright actions">
-                    <button class="button wp-queue-clear-logs" title="<?php echo esc_attr__('Удаляет логи старше 7 дней', 'wp-queue'); ?>">
+                    <button class="button wp-queue-clear-logs" title="<?php echo esc_attr__('Deletes logs older than 7 days', 'wp-queue'); ?>">
                         <span class="dashicons dashicons-trash"></span>
-                        <?php echo esc_html__('Очистить старые', 'wp-queue'); ?>
+                        <?php echo esc_html__('Clear old', 'wp-queue'); ?>
                     </button>
                     <button class="button button-link-delete wp-queue-clear-all-logs">
                         <span class="dashicons dashicons-dismiss"></span>
-                        <?php echo esc_html__('Удалить все', 'wp-queue'); ?>
+                        <?php echo esc_html__('Delete all', 'wp-queue'); ?>
                     </button>
                 </div>
             </div>
@@ -868,17 +869,17 @@ wp queue system              # Show system status</code></pre>';
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th style="width: 150px;"><?php echo esc_html__('Время', 'wp-queue'); ?></th>
-                        <th style="width: 100px;"><?php echo esc_html__('Статус', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Задача', 'wp-queue'); ?></th>
-                        <th style="width: 100px;"><?php echo esc_html__('Очередь', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Сообщение', 'wp-queue'); ?></th>
+                        <th style="width: 150px;"><?php echo esc_html__('Time', 'wp-queue'); ?></th>
+                        <th style="width: 100px;"><?php echo esc_html__('Status', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Job', 'wp-queue'); ?></th>
+                        <th style="width: 100px;"><?php echo esc_html__('Queue', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Message', 'wp-queue'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($logs)) { ?>
                         <tr>
-                            <td colspan="5" class="no-items"><?php echo esc_html__('Логов не найдено', 'wp-queue'); ?></td>
+                            <td colspan="5" class="no-items"><?php echo esc_html__('No logs found', 'wp-queue'); ?></td>
                         </tr>
                     <?php } else { ?>
                         <?php foreach ($logs as $log) { ?>
@@ -906,7 +907,7 @@ wp queue system              # Show system status</code></pre>';
                 <div class="tablenav bottom">
                     <div class="tablenav-pages">
                         <span class="displaying-num">
-                            <?php echo esc_html(sprintf(__('%d записей', 'wp-queue'), $totalLogs)); ?>
+                            <?php echo esc_html(sprintf(__('%d entries', 'wp-queue'), $totalLogs)); ?>
                         </span>
                         <span class="pagination-links">
                             <?php
@@ -946,24 +947,24 @@ wp queue system              # Show system status</code></pre>';
             <div class="wp-queue-stats" style="margin-bottom: 20px;">
                 <div class="stat-card stat-failed">
                     <span class="stat-number"><?php echo esc_html((string) $totalLogs); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Всего ошибок', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Total errors', 'wp-queue'); ?></span>
                 </div>
             </div>
 
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th style="width: 150px;"><?php echo esc_html__('Время', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Задача', 'wp-queue'); ?></th>
-                        <th style="width: 100px;"><?php echo esc_html__('Очередь', 'wp-queue'); ?></th>
-                        <th style="width: 80px;"><?php echo esc_html__('Попытки', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Сообщение об ошибке', 'wp-queue'); ?></th>
+                        <th style="width: 150px;"><?php echo esc_html__('Time', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Job', 'wp-queue'); ?></th>
+                        <th style="width: 100px;"><?php echo esc_html__('Queue', 'wp-queue'); ?></th>
+                        <th style="width: 80px;"><?php echo esc_html__('Attempts', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Error message', 'wp-queue'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($logs)) { ?>
                         <tr>
-                            <td colspan="5" class="no-items"><?php echo esc_html__('Ошибок нет', 'wp-queue'); ?></td>
+                            <td colspan="5" class="no-items"><?php echo esc_html__('No errors', 'wp-queue'); ?></td>
                         </tr>
                     <?php } else { ?>
                         <?php foreach ($logs as $log) { ?>
@@ -1025,21 +1026,21 @@ wp queue system              # Show system status</code></pre>';
             <?php if ($hasFallback) { ?>
                 <div class="notice notice-warning" style="margin: 0 0 20px;">
                     <p>
-                        <strong><?php echo esc_html__('⚠️ Внимание:', 'wp-queue'); ?></strong>
+                        <strong><?php echo esc_html__('⚠️ Warning:', 'wp-queue'); ?></strong>
                         <?php echo esc_html(sprintf(
-                            __('Драйвер "%s" настроен в wp-config.php, но недоступен. Используется fallback на "%s".', 'wp-queue'),
+                            __('Driver "%s" is configured in wp-config.php, but not available. Falling back to "%s".', 'wp-queue'),
                             $configuredDriver,
                             $currentDriver,
                         )); ?>
                     </p>
                     <p>
-                        <?php echo esc_html($drivers[$configuredDriver]['message'] ?? __('Проверьте настройки драйвера.', 'wp-queue')); ?>
+                        <?php echo esc_html($drivers[$configuredDriver]['message'] ?? __('Check driver settings.', 'wp-queue')); ?>
                     </p>
                 </div>
             <?php } else { ?>
                 <div class="notice notice-info" style="margin: 0 0 20px;">
                     <p>
-                        <strong><?php echo esc_html__('Текущий драйвер:', 'wp-queue'); ?></strong>
+                        <strong><?php echo esc_html__('Current driver:', 'wp-queue'); ?></strong>
                         <?php echo esc_html(ucfirst($currentDriver)); ?>
                     </p>
                 </div>
@@ -1048,10 +1049,10 @@ wp queue system              # Show system status</code></pre>';
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th style="width: 150px;"><?php echo esc_html__('Драйвер', 'wp-queue'); ?></th>
-                        <th style="width: 120px;"><?php echo esc_html__('Статус', 'wp-queue'); ?></th>
-                        <th><?php echo esc_html__('Описание', 'wp-queue'); ?></th>
-                        <th style="width: 100px;"><?php echo esc_html__('Активен', 'wp-queue'); ?></th>
+                        <th style="width: 150px;"><?php echo esc_html__('Driver', 'wp-queue'); ?></th>
+                        <th style="width: 120px;"><?php echo esc_html__('Status', 'wp-queue'); ?></th>
+                        <th><?php echo esc_html__('Description', 'wp-queue'); ?></th>
+                        <th style="width: 100px;"><?php echo esc_html__('Active', 'wp-queue'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1064,7 +1065,7 @@ wp queue system              # Show system status</code></pre>';
                             <td>
                                 <strong><?php echo esc_html(ucfirst($name)); ?></strong>
                                 <?php if ($isConfigured && ! $isActive) { ?>
-                                    <br><small style="color: #d63638;"><?php echo esc_html__('(настроен)', 'wp-queue'); ?></small>
+                                    <br><small style="color: #d63638;"><?php echo esc_html__('(configured)', 'wp-queue'); ?></small>
                                 <?php } ?>
                             </td>
                             <td>
@@ -1075,9 +1076,9 @@ wp queue system              # Show system status</code></pre>';
                                 <?php if ($status === \WPQueue\QueueManager::STATUS_NO_EXTENSION) { ?>
                                     <br><small class="description">
                                         <?php if ($name === 'redis') { ?>
-                                            <?php echo esc_html__('Установите: pecl install redis', 'wp-queue'); ?>
+                                            <?php echo esc_html__('Install: pecl install redis', 'wp-queue'); ?>
                                         <?php } elseif ($name === 'memcached') { ?>
-                                            <?php echo esc_html__('Установите: pecl install memcached', 'wp-queue'); ?>
+                                            <?php echo esc_html__('Install: pecl install memcached', 'wp-queue'); ?>
                                         <?php } ?>
                                     </small>
                                 <?php } ?>
@@ -1095,25 +1096,25 @@ wp queue system              # Show system status</code></pre>';
             </table>
 
             <div class="wp-queue-help" style="margin-top: 20px;">
-                <h3><?php echo esc_html__('Как изменить драйвер?', 'wp-queue'); ?></h3>
-                <p><?php echo esc_html__('Добавьте в wp-config.php:', 'wp-queue'); ?></p>
-                <pre><code>define('WP_QUEUE_DRIVER', 'database'); // или 'redis', 'memcached', 'sync', 'auto'</code></pre>
+                <h3><?php echo esc_html__('How to change the driver?', 'wp-queue'); ?></h3>
+                <p><?php echo esc_html__('Add to wp-config.php:', 'wp-queue'); ?></p>
+                <pre><code>define('WP_QUEUE_DRIVER', 'database'); // or 'redis', 'memcached', 'sync', 'auto'</code></pre>
 
-                <h4><?php echo esc_html__('Настройка Redis', 'wp-queue'); ?></h4>
+                <h4><?php echo esc_html__('Configure Redis', 'wp-queue'); ?></h4>
                 <pre><code>define('WP_REDIS_HOST', '127.0.0.1');
 define('WP_REDIS_PORT', 6379);
-define('WP_REDIS_PASSWORD', ''); // если требуется
+define('WP_REDIS_PASSWORD', ''); // if required
 define('WP_QUEUE_DRIVER', 'redis');</code></pre>
 
-                <h4><?php echo esc_html__('Настройка Memcached', 'wp-queue'); ?></h4>
+                <h4><?php echo esc_html__('Configure Memcached', 'wp-queue'); ?></h4>
                 <pre><code>define('WP_MEMCACHED_HOST', '127.0.0.1');
 define('WP_MEMCACHED_PORT', 11211);
 define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
 
                 <div class="notice notice-info inline" style="margin-top: 15px;">
                     <p>
-                        <strong><?php echo esc_html__('Важно:', 'wp-queue'); ?></strong>
-                        <?php echo esc_html__('Для работы Redis/Memcached требуется установленное PHP-расширение И доступный сервер. Если условия не выполнены, система автоматически использует драйвер "database".', 'wp-queue'); ?>
+                        <strong><?php echo esc_html__('Important:', 'wp-queue'); ?></strong>
+                        <?php echo esc_html__('For Redis/Memcached to work, you need the PHP extension installed and a server available. If not, the system will automatically use the "database" driver.', 'wp-queue'); ?>
                     </p>
                 </div>
             </div>
@@ -1132,19 +1133,19 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
         return match ($status) {
             \WPQueue\QueueManager::STATUS_READY => sprintf(
                 '<span class="status-badge status-completed">%s</span>',
-                esc_html__('Готов', 'wp-queue'),
+                esc_html__('Ready', 'wp-queue'),
             ),
             \WPQueue\QueueManager::STATUS_NO_EXTENSION => sprintf(
                 '<span class="status-badge status-failed">%s</span>',
-                esc_html__('Нет расширения', 'wp-queue'),
+                esc_html__('No extension', 'wp-queue'),
             ),
             \WPQueue\QueueManager::STATUS_NO_SERVER => sprintf(
                 '<span class="status-badge status-pending">%s</span>',
-                esc_html__('Нет сервера', 'wp-queue'),
+                esc_html__('No server', 'wp-queue'),
             ),
             default => sprintf(
                 '<span class="status-badge status-failed">%s</span>',
-                esc_html__('Недоступен', 'wp-queue'),
+                esc_html__('Unavailable', 'wp-queue'),
             ),
         };
     }
@@ -1156,15 +1157,15 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
-                    <th><?php echo esc_html__('Время', 'wp-queue'); ?></th>
-                    <th><?php echo esc_html__('Статус', 'wp-queue'); ?></th>
-                    <th><?php echo esc_html__('Задача', 'wp-queue'); ?></th>
+                    <th><?php echo esc_html__('Time', 'wp-queue'); ?></th>
+                    <th><?php echo esc_html__('Status', 'wp-queue'); ?></th>
+                    <th><?php echo esc_html__('Job', 'wp-queue'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($logs)) { ?>
                     <tr>
-                        <td colspan="3" class="no-items"><?php echo esc_html__('Нет активности', 'wp-queue'); ?></td>
+                        <td colspan="3" class="no-items"><?php echo esc_html__('No activity', 'wp-queue'); ?></td>
                     </tr>
                 <?php } else { ?>
                     <?php foreach ($logs as $log) { ?>
@@ -1260,7 +1261,7 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
         $jobs = [];
 
         foreach ($rawJobs as $id => $data) {
-            $class = __('Неизвестно', 'wp-queue');
+            $class = __('Unknown', 'wp-queue');
             $payloadPreview = '';
 
             // Попробуем десериализовать payload для получения класса
@@ -1339,19 +1340,19 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             <div class="wp-queue-stats">
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=scheduler&section=events')); ?>" class="stat-card stat-pending">
                     <span class="stat-number"><?php echo esc_html((string) $stats['total']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Всего событий', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Total Events', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=scheduler&section=scheduled')); ?>" class="stat-card stat-running">
                     <span class="stat-number"><?php echo esc_html((string) count($jobs)); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Запланировано', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Scheduled', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=scheduler&section=events&filter=overdue')); ?>" class="stat-card stat-failed">
                     <span class="stat-number"><?php echo esc_html((string) $stats['overdue']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Просрочено', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Overdue', 'wp-queue'); ?></span>
                 </a>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=scheduler&section=paused')); ?>" class="stat-card">
                     <span class="stat-number"><?php echo esc_html((string) count($monitor->getPaused())); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('На паузе', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Paused', 'wp-queue'); ?></span>
                 </a>
             </div>
 
@@ -1360,15 +1361,15 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
                 <span class="dashicons dashicons-clock"></span>
                 <?php echo esc_html__('WP-Cron:', 'wp-queue'); ?>
                 <?php if (defined('DISABLE_WP_CRON') && constant('DISABLE_WP_CRON')) { ?>
-                    <span class="status-badge status-failed"><?php echo esc_html__('Отключён', 'wp-queue'); ?></span>
-                    <span class="description"><?php echo esc_html__('Используйте системный cron', 'wp-queue'); ?></span>
+                    <span class="status-badge status-failed"><?php echo esc_html__('Disabled', 'wp-queue'); ?></span>
+                    <span class="description"><?php echo esc_html__('Use system cron', 'wp-queue'); ?></span>
                 <?php } else { ?>
-                    <span class="status-badge status-completed"><?php echo esc_html__('Активен', 'wp-queue'); ?></span>
+                    <span class="status-badge status-completed"><?php echo esc_html__('Active', 'wp-queue'); ?></span>
                 <?php } ?>
             </div>
 
             <!-- События по источникам -->
-            <h2><?php echo esc_html__('События по источникам', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Events by Source', 'wp-queue'); ?></h2>
             <div class="wp-queue-cards">
                 <?php foreach ($stats['by_source'] as $source => $count) { ?>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=wp-queue&tab=scheduler&section=events&filter='.urlencode($source))); ?>" class="queue-card">
@@ -1378,7 +1379,7 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
                         <div class="queue-card-body">
                             <div class="queue-card-stat">
                                 <span class="queue-stat-number"><?php echo esc_html((string) $count); ?></span>
-                                <span class="queue-stat-label"><?php echo esc_html__('событий', 'wp-queue'); ?></span>
+                                <span class="queue-stat-label"><?php echo esc_html__('events', 'wp-queue'); ?></span>
                             </div>
                         </div>
                         <div class="queue-card-footer">
@@ -1389,18 +1390,18 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             </div>
 
             <!-- Ближайшие события -->
-            <h2><?php echo esc_html__('Ближайшие события', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Upcoming Events', 'wp-queue'); ?></h2>
             <?php
                 $upcomingEvents = array_slice($monitor->getAllEvents(), 0, 5);
         if (empty($upcomingEvents)) { ?>
-                <p class="description"><?php echo esc_html__('Нет запланированных событий', 'wp-queue'); ?></p>
+                <p class="description"><?php echo esc_html__('No scheduled events', 'wp-queue'); ?></p>
             <?php } else { ?>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo esc_html__('Хук', 'wp-queue'); ?></th>
-                            <th style="width: 150px;"><?php echo esc_html__('Следующий запуск', 'wp-queue'); ?></th>
-                            <th style="width: 100px;"><?php echo esc_html__('Источник', 'wp-queue'); ?></th>
+                            <th><?php echo esc_html__('Hook', 'wp-queue'); ?></th>
+                            <th style="width: 150px;"><?php echo esc_html__('Next Run', 'wp-queue'); ?></th>
+                            <th style="width: 100px;"><?php echo esc_html__('Source', 'wp-queue'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1438,11 +1439,11 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             <div class="wp-queue-stats">
                 <a href="?page=wp-queue&tab=scheduler&section=events&filter=all" class="stat-card <?php echo $filter === 'all' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $stats['total']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Всего', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Total', 'wp-queue'); ?></span>
                 </a>
                 <a href="?page=wp-queue&tab=scheduler&section=events&filter=overdue" class="stat-card stat-failed <?php echo $filter === 'overdue' ? 'active' : ''; ?>">
                     <span class="stat-number"><?php echo esc_html((string) $stats['overdue']); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Просрочено', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Overdue', 'wp-queue'); ?></span>
                 </a>
                 <?php foreach ($stats['by_source'] as $source => $count) { ?>
                     <div class="stat-card">
@@ -1638,7 +1639,7 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
         <div class="wp-queue-system">
             <p class="description">
                 <?php echo esc_html__(
-                    'Показывает информацию об окружении (версии PHP и WordPress, лимиты памяти, время выполнения, таймзона), статус WP-Cron (отключен ли, альтернативный крон, loopback проверки). Если установлен Action Scheduler — его статистику. Время сервера и WordPress.',
+                    'Displays environment information (PHP and WordPress versions, memory limits, execution time, timezone), WP-Cron status (disabled, alternative cron, loopback checks). If Action Scheduler is installed - its statistics. Server and WordPress time.',
                     'wp-queue',
                 ); ?>
             </p>
@@ -1816,11 +1817,11 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             <div class="wp-queue-stats">
                 <div class="stat-card stat-completed">
                     <span class="stat-number"><?php echo esc_html((string) ($metrics['completed'] ?? 0)); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Выполнено', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Completed', 'wp-queue'); ?></span>
                 </div>
                 <div class="stat-card stat-failed">
                     <span class="stat-number"><?php echo esc_html((string) ($metrics['failed'] ?? 0)); ?></span>
-                    <span class="stat-label"><?php echo esc_html__('Ошибок', 'wp-queue'); ?></span>
+                    <span class="stat-label"><?php echo esc_html__('Errors', 'wp-queue'); ?></span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-number"><?php echo esc_html($report['memory_limit_formatted'] ?? 'N/A'); ?></span>
@@ -1833,7 +1834,7 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             </div>
 
             <!-- Версии -->
-            <h2><?php echo esc_html__('Версии', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Versions', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">
                 <tbody>
                     <tr>
@@ -1852,11 +1853,11 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             </table>
 
             <!-- Статус компонентов -->
-            <h2><?php echo esc_html__('Статус компонентов', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Component Status', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">
                 <tbody>
                     <tr>
-                        <th scope="row" style="width:200px;"><?php echo esc_html__('Драйвер очередей', 'wp-queue'); ?></th>
+                        <th scope="row" style="width:200px;"><?php echo esc_html__('Queue Driver', 'wp-queue'); ?></th>
                         <td>
                             <span class="status-badge status-completed"><?php echo esc_html(ucfirst($driver)); ?></span>
                         </td>
@@ -1865,10 +1866,10 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
                         <th scope="row"><?php echo esc_html__('WP-Cron', 'wp-queue'); ?></th>
                         <td>
                             <?php if ($cronInfo['disabled'] ?? false) { ?>
-                                <span class="status-badge status-failed"><?php echo esc_html__('Отключён', 'wp-queue'); ?></span>
-                                <span class="description"><?php echo esc_html__('Настройте системный cron', 'wp-queue'); ?></span>
+                                <span class="status-badge status-failed"><?php echo esc_html__('Disabled', 'wp-queue'); ?></span>
+                                <span class="description"><?php echo esc_html__('Configure system cron', 'wp-queue'); ?></span>
                             <?php } else { ?>
-                                <span class="status-badge status-completed"><?php echo esc_html__('Активен', 'wp-queue'); ?></span>
+                                <span class="status-badge status-completed"><?php echo esc_html__('Active', 'wp-queue'); ?></span>
                             <?php } ?>
                         </td>
                     </tr>
@@ -1903,7 +1904,7 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
                         <td><?php echo esc_html($phpInfo['memory_limit'] ?? ini_get('memory_limit')); ?></td>
                     </tr>
                     <tr>
-                        <th scope="row"><?php echo esc_html__('Использовано', 'wp-queue'); ?></th>
+                        <th scope="row"><?php echo esc_html__('Used', 'wp-queue'); ?></th>
                         <td><?php echo esc_html($phpInfo['memory_usage'] ?? size_format(memory_get_usage(true))); ?></td>
                     </tr>
                     <tr>
@@ -1914,19 +1915,19 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
             </table>
 
             <!-- Время -->
-            <h2><?php echo esc_html__('Время', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Time', 'wp-queue'); ?></h2>
             <table class="wp-list-table widefat fixed striped">
                 <tbody>
                     <tr>
-                        <th scope="row" style="width:200px;"><?php echo esc_html__('Время сервера', 'wp-queue'); ?></th>
+                        <th scope="row" style="width:200px;"><?php echo esc_html__('Server Time', 'wp-queue'); ?></th>
                         <td><?php echo esc_html($timeInfo['server_time'] ?? gmdate('Y-m-d H:i:s')); ?></td>
                     </tr>
                     <tr>
-                        <th scope="row"><?php echo esc_html__('Время WordPress', 'wp-queue'); ?></th>
+                        <th scope="row"><?php echo esc_html__('WordPress Time', 'wp-queue'); ?></th>
                         <td><?php echo esc_html($timeInfo['wp_time'] ?? wp_date('Y-m-d H:i:s')); ?></td>
                     </tr>
                     <tr>
-                        <th scope="row"><?php echo esc_html__('Часовой пояс', 'wp-queue'); ?></th>
+                        <th scope="row"><?php echo esc_html__('Timezone', 'wp-queue'); ?></th>
                         <td>
                             <?php
         $offset = $timeInfo['gmt_offset'] ?? get_option('gmt_offset', 0);
@@ -1942,12 +1943,12 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
                 <table class="wp-list-table widefat fixed striped">
                     <tbody>
                         <tr>
-                            <th scope="row" style="width:200px;"><?php echo esc_html__('Версия', 'wp-queue'); ?></th>
+                            <th scope="row" style="width:200px;"><?php echo esc_html__('Version', 'wp-queue'); ?></th>
                             <td><code><?php echo esc_html($asInfo['version'] ?? 'Unknown'); ?></code></td>
                         </tr>
                         <?php if (isset($asInfo['stats'])) { ?>
                             <tr>
-                                <th scope="row"><?php echo esc_html__('Ожидающих', 'wp-queue'); ?></th>
+                                <th scope="row"><?php echo esc_html__('Pending', 'wp-queue'); ?></th>
                                 <td><?php echo esc_html((string) ($asInfo['stats']['pending'] ?? 0)); ?></td>
                             </tr>
                         <?php } ?>
@@ -1973,29 +1974,29 @@ define('WP_QUEUE_DRIVER', 'memcached');</code></pre>
     {
         ?>
         <div class="wp-queue-content-wrapper">
-            <h2><?php echo esc_html__('Инструменты', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('Tools', 'wp-queue'); ?></h2>
 
             <div class="wp-queue-tools-grid">
                 <div class="tool-card">
-                    <h3><span class="dashicons dashicons-trash"></span> <?php echo esc_html__('Очистить логи', 'wp-queue'); ?></h3>
-                    <p class="description"><?php echo esc_html__('Удаляет все логи выполнения задач', 'wp-queue'); ?></p>
-                    <button class="button wp-queue-clear-all-logs"><?php echo esc_html__('Очистить все логи', 'wp-queue'); ?></button>
+                    <h3><span class="dashicons dashicons-trash"></span> <?php echo esc_html__('Clear Logs', 'wp-queue'); ?></h3>
+                    <p class="description"><?php echo esc_html__('Deletes all job execution logs', 'wp-queue'); ?></p>
+                    <button class="button wp-queue-clear-all-logs"><?php echo esc_html__('Clear All Logs', 'wp-queue'); ?></button>
                 </div>
 
                 <div class="tool-card">
-                    <h3><span class="dashicons dashicons-update"></span> <?php echo esc_html__('Обработать очереди', 'wp-queue'); ?></h3>
-                    <p class="description"><?php echo esc_html__('Принудительно запускает обработку всех очередей', 'wp-queue'); ?></p>
-                    <button class="button wp-queue-process-all"><?php echo esc_html__('Обработать сейчас', 'wp-queue'); ?></button>
+                    <h3><span class="dashicons dashicons-update"></span> <?php echo esc_html__('Process Queues', 'wp-queue'); ?></h3>
+                    <p class="description"><?php echo esc_html__('Forces processing of all queues', 'wp-queue'); ?></p>
+                    <button class="button wp-queue-process-all"><?php echo esc_html__('Process Now', 'wp-queue'); ?></button>
                 </div>
 
                 <div class="tool-card">
-                    <h3><span class="dashicons dashicons-backup"></span> <?php echo esc_html__('Очистить все очереди', 'wp-queue'); ?></h3>
-                    <p class="description"><?php echo esc_html__('Удаляет все задачи из всех очередей', 'wp-queue'); ?></p>
-                    <button class="button button-link-delete wp-queue-clear-all-queues"><?php echo esc_html__('Очистить все', 'wp-queue'); ?></button>
+                    <h3><span class="dashicons dashicons-backup"></span> <?php echo esc_html__('Clear All Queues', 'wp-queue'); ?></h3>
+                    <p class="description"><?php echo esc_html__('Deletes all jobs from all queues', 'wp-queue'); ?></p>
+                    <button class="button button-link-delete wp-queue-clear-all-queues"><?php echo esc_html__('Clear All', 'wp-queue'); ?></button>
                 </div>
             </div>
 
-            <h2><?php echo esc_html__('WP-CLI команды', 'wp-queue'); ?></h2>
+            <h2><?php echo esc_html__('WP-CLI Commands', 'wp-queue'); ?></h2>
             <div class="wp-queue-help">
                 <pre><code># Обработать очередь
 wp queue work --queue=default
@@ -2021,9 +2022,9 @@ wp queue cron list</code></pre>
         ?>
         <div class="wp-queue-content-wrapper wp-queue-help-page">
             <div class="help-intro">
-                <h2><?php echo esc_html__('WP Queue — система очередей для WordPress', 'wp-queue'); ?></h2>
+                <h2><?php echo esc_html__('WP Queue — Queue System for WordPress', 'wp-queue'); ?></h2>
                 <p class="description">
-                    <?php echo esc_html__('WP Queue позволяет выполнять задачи асинхронно в фоновом режиме, не блокируя основной поток выполнения WordPress.', 'wp-queue'); ?>
+                    <?php echo esc_html__('WP Queue allows executing tasks asynchronously in the background without blocking the main WordPress execution flow.', 'wp-queue'); ?>
                 </p>
             </div>
 
@@ -2033,8 +2034,8 @@ wp queue cron list</code></pre>
                     <div class="help-card-icon">
                         <span class="dashicons dashicons-welcome-learn-more"></span>
                     </div>
-                    <h3><?php echo esc_html__('Быстрый старт', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Создайте класс задачи и отправьте её в очередь:', 'wp-queue'); ?></p>
+                    <h3><?php echo esc_html__('Quick Start', 'wp-queue'); ?></h3>
+                    <p><?php echo esc_html__('Create a job class and dispatch it to the queue:', 'wp-queue'); ?></p>
                     <pre><code>use WPQueue\Jobs\Job;
 
 class MyJob extends Job {
@@ -2052,8 +2053,8 @@ WPQueue::dispatch(new MyJob());</code></pre>
                     <div class="help-card-icon">
                         <span class="dashicons dashicons-clock"></span>
                     </div>
-                    <h3><?php echo esc_html__('Отложенные задачи', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Запланируйте выполнение задачи через определённое время:', 'wp-queue'); ?></p>
+                    <h3><?php echo esc_html__('Delayed Jobs', 'wp-queue'); ?></h3>
+                    <p><?php echo esc_html__('Schedule a job to run after a specific time:', 'wp-queue'); ?></p>
                     <pre><code>// Через 5 минут
 WPQueue::dispatch(
     (new MyJob())->delay(300)
@@ -2072,8 +2073,8 @@ WPQueue::dispatch(
                     <div class="help-card-icon">
                         <span class="dashicons dashicons-database"></span>
                     </div>
-                    <h3><?php echo esc_html__('Именованные очереди', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Распределяйте задачи по разным очередям:', 'wp-queue'); ?></p>
+                    <h3><?php echo esc_html__('Named Queues', 'wp-queue'); ?></h3>
+                    <p><?php echo esc_html__('Distribute jobs across different queues:', 'wp-queue'); ?></p>
                     <pre><code>// Отправить в очередь emails
 WPQueue::dispatch(
     (new SendEmailJob())->onQueue('emails')
@@ -2090,8 +2091,8 @@ WPQueue::dispatch(
                     <div class="help-card-icon">
                         <span class="dashicons dashicons-update"></span>
                     </div>
-                    <h3><?php echo esc_html__('Повторные попытки', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Настройте автоматические повторы при ошибках:', 'wp-queue'); ?></p>
+                    <h3><?php echo esc_html__('Retry Attempts', 'wp-queue'); ?></h3>
+                    <p><?php echo esc_html__('Configure automatic retries on errors:', 'wp-queue'); ?></p>
                     <pre><code>class MyJob extends Job {
     protected int $maxAttempts = 3;
     protected int $timeout = 60;
@@ -2111,8 +2112,8 @@ WPQueue::dispatch(
                     <div class="help-card-icon">
                         <span class="dashicons dashicons-calendar-alt"></span>
                     </div>
-                    <h3><?php echo esc_html__('Планировщик', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Запускайте задачи по расписанию:', 'wp-queue'); ?></p>
+                    <h3><?php echo esc_html__('Scheduler', 'wp-queue'); ?></h3>
+                    <p><?php echo esc_html__('Run tasks on schedule:', 'wp-queue'); ?></p>
                     <pre><code>// Каждый час
 WPQueue::scheduler()->hourly(
     new CleanupJob()
@@ -2135,7 +2136,7 @@ WPQueue::scheduler()->everyMinutes(
                         <span class="dashicons dashicons-editor-code"></span>
                     </div>
                     <h3><?php echo esc_html__('WP-CLI команды', 'wp-queue'); ?></h3>
-                    <p><?php echo esc_html__('Управляйте очередями из командной строки:', 'wp-queue'); ?></p>
+                    <p><?php echo esc_html__('Manage queues from command line:', 'wp-queue'); ?></p>
                     <pre><code># Обработать очередь
 wp queue work --queue=default
 
@@ -2155,18 +2156,24 @@ wp queue cron run hook_name</code></pre>
 
             <!-- Полезные ссылки -->
             <div class="help-links">
-                <h3><?php echo esc_html__('Полезные ссылки', 'wp-queue'); ?></h3>
+                <h3><?php echo esc_html__('Useful Links', 'wp-queue'); ?></h3>
                 <ul>
                     <li>
                         <span class="dashicons dashicons-book"></span>
                         <a href="https://github.com/developer/wp-queue" target="_blank">
-                            <?php echo esc_html__('Документация на GitHub', 'wp-queue'); ?>
+                            <?php echo esc_html__('Documentation on GitHub', 'wp-queue'); ?>
                         </a>
                     </li>
                     <li>
                         <span class="dashicons dashicons-sos"></span>
                         <a href="https://github.com/developer/wp-queue/issues" target="_blank">
-                            <?php echo esc_html__('Сообщить о проблеме', 'wp-queue'); ?>
+                            <?php echo esc_html__('Report an Issue', 'wp-queue'); ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="dashicons dashicons-admin-plugins"></span>
+                        <a href="https://github.com/rwsite/wp-queue-example-plugin" target="_blank">
+                            <?php echo esc_html__('Example Plugin on GitHub', 'wp-queue'); ?>
                         </a>
                     </li>
                 </ul>
@@ -2194,29 +2201,29 @@ wp queue cron run hook_name</code></pre>
         <div class="wp-queue-paused">
             <?php if (empty($paused)) { ?>
                 <div class="notice notice-info" style="margin: 0;">
-                    <p><?php echo esc_html__('Нет приостановленных событий', 'wp-queue'); ?></p>
+                    <p><?php echo esc_html__('No paused events', 'wp-queue'); ?></p>
                 </div>
             <?php } else { ?>
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo esc_html__('Хук', 'wp-queue'); ?></th>
-                            <th style="width: 120px;"><?php echo esc_html__('Расписание', 'wp-queue'); ?></th>
-                            <th style="width: 150px;"><?php echo esc_html__('Приостановлено', 'wp-queue'); ?></th>
-                            <th style="width: 120px;"><?php echo esc_html__('Действия', 'wp-queue'); ?></th>
+                            <th><?php echo esc_html__('Hook', 'wp-queue'); ?></th>
+                            <th style="width: 120px;"><?php echo esc_html__('Schedule', 'wp-queue'); ?></th>
+                            <th style="width: 150px;"><?php echo esc_html__('Paused Since', 'wp-queue'); ?></th>
+                            <th style="width: 120px;"><?php echo esc_html__('Actions', 'wp-queue'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($paused as $event) { ?>
                             <tr>
                                 <td><code><?php echo esc_html($event['hook']); ?></code></td>
-                                <td><?php echo esc_html($event['schedule'] ?: __('Одноразовое', 'wp-queue')); ?></td>
+                                <td><?php echo esc_html($event['schedule'] ?: __('One-time', 'wp-queue')); ?></td>
                                 <td><?php echo esc_html(wp_date('Y-m-d H:i:s', $event['paused_at'])); ?></td>
                                 <td>
                                     <button class="button button-small wp-queue-cron-resume"
                                         data-hook="<?php echo esc_attr($event['hook']); ?>"
                                         data-args="<?php echo esc_attr(wp_json_encode($event['args'])); ?>">
-                                        <?php echo esc_html__('Возобновить', 'wp-queue'); ?>
+                                        <?php echo esc_html__('Resume', 'wp-queue'); ?>
                                     </button>
                                 </td>
                             </tr>

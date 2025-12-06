@@ -24,6 +24,7 @@ class AdminPage
 
     public function __construct()
     {
+        $this->initTabs();
         add_action('init', [$this, 'initTabs'], 5);
         add_action('admin_menu', [$this, 'addMenuPage']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);

@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: WP Queue 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/rwsite/wp-queue/issues\n"
 "POT-Creation-Date: 2025-12-06 01:35+0000\n"
-"PO-Revision-Date: 2025-12-05 23:49+0000\n"
-"Last-Translator: Aleksei Tikhomirov <alex@rwsite.ru>\n"
+"PO-Revision-Date: 2025-12-06 00:11+0000\n"
+"Last-Translator: \n"
 "Language-Team: Русский\n"
 "Language: ru_RU\n"
 "MIME-Version: 1.0\n"
@@ -15,7 +15,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Loco https://localise.biz/"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.8.0; wp-6.9; php-8.3.28"
 
 #: src/Admin/AdminPage.php:910
 msgid "%d entries"
@@ -579,10 +580,9 @@ msgstr ""
 
 #: src/Admin/AdminPage.php:45 src/Admin/AdminPage.php:327
 #: src/Admin/AdminPage.php:356 src/Admin/AdminPage.php:843
-#, fuzzy
 #| msgid "File"
 msgid "Failed"
-msgstr "Неудачи"
+msgstr "Сбои и неудачи"
 
 #: src/Admin/AdminPage.php:1760
 msgid "Failed Actions"
@@ -810,7 +810,8 @@ msgstr "Управление запланированными повторяющ
 msgid ""
 "Management of WordPress system timers that trigger background processes."
 msgstr ""
-"Управление системными таймерами WordPress, которые запускают фоновые процессы."
+"Управление системными таймерами WordPress, которые запускают фоновые "
+"процессы."
 
 #: src/Admin/AdminPage.php:732
 msgid "Manual run"
@@ -835,7 +836,9 @@ msgstr "Сообщение"
 
 #: src/Admin/AdminPage.php:111
 msgid "Monitor which background jobs are queued and running right now."
-msgstr "Отслеживайте, какие фоновые задачи находятся в очереди и выполняются прямо сейчас."
+msgstr ""
+"Отслеживайте, какие фоновые задачи находятся в очереди и выполняются прямо "
+"сейчас."
 
 #: src/Admin/AdminPage.php:790
 msgid "More documentation"
@@ -896,7 +899,8 @@ msgstr "Нет сервера"
 
 #: src/Admin/AdminPage.php:779
 msgid "Notifications of critical issues (low memory, disabled WP-Cron)."
-msgstr "Уведомления о критических проблемах (низкая память, отключенный WP-Cron)."
+msgstr ""
+"Уведомления о критических проблемах (низкая память, отключенный WP-Cron)."
 
 #: src/Admin/AdminPage.php:506
 msgid "Now"
@@ -972,8 +976,8 @@ msgid ""
 "PHP and WordPress versions, memory limits (current usage), maximum execution "
 "time, timezone."
 msgstr ""
-"Версии PHP и WordPress, лимиты памяти (текущее использование), максимальное время "
-"выполнения, часовой пояс."
+"Версии PHP и WordPress, лимиты памяти (текущее использование), максимальное "
+"время выполнения, часовой пояс."
 
 #: src/QueueManager.php:288
 msgid "PHP extension \"memcached\" is not installed"
@@ -1047,7 +1051,9 @@ msgstr "Быстрый старт"
 
 #: src/Admin/AdminPage.php:112
 msgid "Quickly see if any jobs are failing and view recent log entries."
-msgstr "Быстро проверьте, не завершаются ли задачи неудачей, и просмотрите недавние записи журнала."
+msgstr ""
+"Быстро проверьте, не завершаются ли задачи неудачей, и просмотрите недавние "
+"записи журнала."
 
 #: src/Admin/AdminPage.php:1136
 msgid "Ready"

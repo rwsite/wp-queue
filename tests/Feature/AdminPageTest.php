@@ -35,7 +35,7 @@ test('AdminPage регистрирует меню верхнего уровня'
     expect(method_exists($adminPage, 'addMenuPage'))->toBeTrue();
 });
 
-test('AdminPage имеет 4 основные вкладки', function (): void {
+test('AdminPage имеет 3 основные вкладки', function (): void {
     $adminPage = new AdminPage();
     $reflection = new ReflectionClass($adminPage);
 
@@ -45,11 +45,10 @@ test('AdminPage имеет 4 основные вкладки', function (): void
     $tabs = $tabsProperty->getValue($adminPage);
 
     expect($tabs)->toBeArray();
-    expect($tabs)->toHaveCount(4);
+    expect($tabs)->toHaveCount(3);
     expect($tabs)->toHaveKey('queues');
     expect($tabs)->toHaveKey('scheduler');
-    expect($tabs)->toHaveKey('diagnostics');
-    expect($tabs)->toHaveKey('docs');
+    expect($tabs)->toHaveKey('system');
 });
 
 test('AdminPage имеет секции для каждой вкладки', function (): void {
@@ -63,8 +62,7 @@ test('AdminPage имеет секции для каждой вкладки', fun
     expect($sections)->toBeArray();
     expect($sections)->toHaveKey('queues');
     expect($sections)->toHaveKey('scheduler');
-    expect($sections)->toHaveKey('diagnostics');
-    expect($sections)->toHaveKey('docs');
+    expect($sections)->toHaveKey('system');
 });
 
 test('Вкладка Очереди имеет 5 секций', function (): void {
@@ -80,10 +78,10 @@ test('Вкладка Очереди имеет 5 секций', function (): voi
     expect($sections['queues'])->toHaveKey('jobs');
     expect($sections['queues'])->toHaveKey('history');
     expect($sections['queues'])->toHaveKey('drivers');
-    expect($sections['queues'])->toHaveKey('settings');
+    expect($sections['queues'])->toHaveKey('failed');
 });
 
-test('Вкладка Планировщик заданий имеет 5 секций', function (): void {
+test('Вкладка Планировщик заданий имеет 4 секции', function (): void {
     $adminPage = new AdminPage();
     $reflection = new ReflectionClass($adminPage);
 
@@ -91,15 +89,14 @@ test('Вкладка Планировщик заданий имеет 5 секц
     $sectionsProperty->setAccessible(true);
     $sections = $sectionsProperty->getValue($adminPage);
 
-    expect($sections['scheduler'])->toHaveCount(5);
+    expect($sections['scheduler'])->toHaveCount(4);
     expect($sections['scheduler'])->toHaveKey('overview');
     expect($sections['scheduler'])->toHaveKey('events');
     expect($sections['scheduler'])->toHaveKey('paused');
-    expect($sections['scheduler'])->toHaveKey('schedules');
-    expect($sections['scheduler'])->toHaveKey('settings');
+    expect($sections['scheduler'])->toHaveKey('scheduled');
 });
 
-test('Вкладка Диагностика имеет 4 секции', function (): void {
+test('Вкладка Система имеет 3 секции', function (): void {
     $adminPage = new AdminPage();
     $reflection = new ReflectionClass($adminPage);
 
@@ -107,27 +104,10 @@ test('Вкладка Диагностика имеет 4 секции', function
     $sectionsProperty->setAccessible(true);
     $sections = $sectionsProperty->getValue($adminPage);
 
-    expect($sections['diagnostics'])->toHaveCount(4);
-    expect($sections['diagnostics'])->toHaveKey('health');
-    expect($sections['diagnostics'])->toHaveKey('environment');
-    expect($sections['diagnostics'])->toHaveKey('logs');
-    expect($sections['diagnostics'])->toHaveKey('tools');
-});
-
-test('Вкладка Документация имеет 5 секций', function (): void {
-    $adminPage = new AdminPage();
-    $reflection = new ReflectionClass($adminPage);
-
-    $sectionsProperty = $reflection->getProperty('sections');
-    $sectionsProperty->setAccessible(true);
-    $sections = $sectionsProperty->getValue($adminPage);
-
-    expect($sections['docs'])->toHaveCount(5);
-    expect($sections['docs'])->toHaveKey('intro');
-    expect($sections['docs'])->toHaveKey('quickstart');
-    expect($sections['docs'])->toHaveKey('api');
-    expect($sections['docs'])->toHaveKey('cli');
-    expect($sections['docs'])->toHaveKey('faq');
+    expect($sections['system'])->toHaveCount(3);
+    expect($sections['system'])->toHaveKey('status');
+    expect($sections['system'])->toHaveKey('tools');
+    expect($sections['system'])->toHaveKey('help');
 });
 
 test('AdminPage имеет метод renderPage', function (): void {
@@ -185,18 +165,6 @@ test('AdminPage рендерит методы для секций Планиро
     $adminPage = new AdminPage();
 
     expect(method_exists($adminPage, 'renderSchedulerEvents'))->toBeTrue();
-});
-
-test('AdminPage рендерит методы для секций Диагностики', function (): void {
-    $adminPage = new AdminPage();
-
-    expect(method_exists($adminPage, 'renderDiagnosticsEnvironment'))->toBeTrue();
-});
-
-test('AdminPage рендерит методы для секций Документации', function (): void {
-    $adminPage = new AdminPage();
-
-    expect(method_exists($adminPage, 'renderDocsIntro'))->toBeTrue();
 });
 
 test('Метод getStatusLabel возвращает корректные метки', function (): void {
